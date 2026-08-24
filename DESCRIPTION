@@ -1,0 +1,26 @@
+Package: aradR
+Type: Package
+Title: Modern R Client and Toolkit for the Czech National Bank ARAD API
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Simona", "Malovana", email = "simona.malovana@gmail.com", role = c("aut", "cre"))
+  )
+Description: Provides a reliability-first interface to the Czech National Bank
+    ARAD API for discovering indicators, retrieving and validating time series,
+    working with metadata and snapshots, and building reproducible data
+    workflows. The package is designed for robust handling of long requests,
+    parsing diagnostics, missing values, retries, caching, and automated tests.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Language: en
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports:
+    httr2,
+    readr,
+    tibble
+Suggests:
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+URL: https://github.com/simonamalovana/aradR
+BugReports: https://github.com/simonamalovana/aradR/issues
