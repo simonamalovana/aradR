@@ -1,29 +1,37 @@
 discovery_stub <- function(endpoint, query, api_key, base_url) {
-  switch(
+  rows <- switch(
     endpoint,
-    indicators = make_arad_raw(c(
+    indicators = c(
       "indicator_id;indicator_name;frequency_code;frequency_name;unit_mult_code;unit_mult_name;unit",
       "A1;Consumer prices;M;Monthly;0;units;index",
       "A2;Policy rate;D;Daily;0;units;%"
-    )),
-    `indicators-tree` = make_arad_raw(c(
+    ),
+    `indicators-tree` = c(
       "indicator_id;path",
       "A1;ARAD/Statistics/Prices",
       "A2;ARAD/Monetary policy/Interest rates"
-    )),
-    `indicators-dims` = make_arad_raw(c(
+    ),
+    `indicators-dims` = c(
       "indicator_id;base_id;base_name;dim_code;dim_name;dim_value_code;dim_value_name;dim_rank",
       "A1;PRICES;Prices;SEC;Sector;HH;Households;1",
       "A2;RATES;Interest rates;TYPE;Rate type;POL;Policy rate;1"
-    )),
-    updates = make_arad_raw(c(
+    ),
+    updates = c(
       "indicator_id;snapshot_id;update_date;data_from;data_to",
       "A1;;20260824120000;20000101;20260701",
       "A1;S1;20260823120000;20050101;20260601",
       "A2;;20260824130000;19950101;20260824"
-    )),
+    ),
     stop("unexpected endpoint")
   )
+
+  if (!is.null(query$indicator_id_list)) {
+    ids <- strsplit(query$indicator_id_list, ",", fixed = TRUE)[[1L]]
+    row_ids <- sub(";.*$", "", rows[-1L])
+    rows <- c(rows[[1L]], rows[-1L][row_ids %in% ids])
+  }
+
+  make_arad_raw(rows)
 }
 
 test_that("arad_catalog builds one-row-per-indicator discovery metadata", {
