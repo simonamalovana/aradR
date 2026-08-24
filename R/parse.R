@@ -90,15 +90,28 @@ arad_parse_datetime_column <- function(x, column, allow_missing = TRUE) {
   parsed
 }
 
-arad_validate_data_keys <- function(data) {
+arad_data_key <- function(data) {
   snapshot_key <- ifelse(is.na(data$snapshot_id), "<NA>", data$snapshot_id)
-  key <- paste(data$indicator_id, snapshot_key, format(data$period, "%Y%m%d"), sep = "\r")
-  if (anyDuplicated(key)) {
-    arad_abort(
-      "ARAD response contains duplicate indicator/snapshot/period observations.",
-      "arad_integrity_error"
-    )
+  paste(data$indicator_id, snapshot_key, format(data$period, "%Y%m%d"), sep = "\r")
+}
+
+arad_validate_data_keys <- function(data) {
+  key <- arad_data_key(data)
+  duplicate <- duplicated(key) | duplicated(key, fromLast = TRUE)
+  if (!any(duplicate)) {
+    return(invisible(data))
   }
+
+  for (duplicate_key in unique(key[duplicate])) {
+    values <- data$value[key == duplicate_key]
+    if (length(unique(values)) > 1L) {
+      arad_abort(
+        "ARAD response contains conflicting values for the same indicator/snapshot/period observation.",
+        "arad_integrity_error"
+      )
+    }
+  }
+
   invisible(data)
 }
 
@@ -106,6 +119,14 @@ arad_sort_data <- function(data) {
   if (nrow(data) == 0L) {
     return(data)
   }
+
+  # ARAD may return the same period in two adjacent date-range requests when a
+  # chunk boundary falls inside a monthly/quarterly reporting period. Identical
+  # duplicates are redundant and safe to collapse; conflicting duplicates are
+  # rejected by `arad_validate_data_keys()` before this function is called.
+  key <- arad_data_key(data)
+  data <- data[!duplicated(key), , drop = FALSE]
+
   order_index <- order(data$indicator_id, data$snapshot_id, data$period, na.last = TRUE)
   data[order_index, , drop = FALSE]
 }
