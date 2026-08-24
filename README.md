@@ -43,7 +43,7 @@ Exactly one ARAD selector is accepted where a scoped endpoint requires one: `ind
 
 `arad_get()` defaults to `strategy = "auto"`: missing date boundaries are resolved through `/updates`, and long histories are divided into deterministic non-overlapping requests before they are parsed and combined. `strategy = "direct"` is available for diagnostics and benchmarking.
 
-API responses are ingested as character fields first and explicitly validated afterwards. Genuine missing values are preserved; malformed non-missing numeric values, invalid dates, structural parsing problems, and duplicate observation keys fail loudly.
+API responses are ingested as character fields first and explicitly validated afterwards. Genuine missing values are preserved; malformed non-missing numeric values, invalid dates, structural parsing problems, and conflicting duplicate observation keys fail loudly. Identical cross-chunk boundary overlaps are collapsed safely.
 
 Retrieval details are available via:
 
@@ -89,15 +89,13 @@ Available modes are `"none"`, `"session"`, and `"disk"`. Disk cache location and
 
 ## Reliability audit
 
-The repository includes a staged live audit in `tools/live-audit.R` and a manual GitHub Actions workflow. It samples series across frequency and history-length strata, then compares:
+The repository includes staged live audits and GitHub Actions workflows that compare fine-grained chunked retrieval, the normal `aradR` chunk size, and a single direct ARAD request.
 
-1. fine-grained chunked retrieval as the reference,
-2. the normal `aradR` chunk size,
-3. a single direct ARAD request.
+The initial reliability calibration completed on 24 August 2026. Coverage included long monthly, quarterly and annual series across multiple ARAD scopes, a mixed multi-indicator request, snapshot-backed data, and the daily `SFTP01D15` policy-rate series. The daily series was checked over its full 1995–2026 history and over approximately 3-year and 10-year windows.
 
-This allows the package to discover long-range retrieval inconsistencies even without the original failing series reported during the predecessor review. The audit is deliberately sampled and rate-limited because ARAD documents that excessive request frequency or volume may lead to API access being blocked.
+Across the completed matrix, the production default of 3650 days matched the finer references exactly: no missing-key differences, no `NA` mismatches, no numeric-value mismatches, and maximum absolute difference zero. Direct requests also matched the references in the tested cases. The 3650-day default is therefore retained as the calibrated default for the current coverage matrix.
 
-The current default chunk size remains provisional until this live audit has been run across a sufficiently broad set of ARAD areas.
+The audit remains intentionally bounded and rate-limited because ARAD documents that excessive request frequency or volume may lead to API access being blocked. Release-quality validation can re-run the broader staged audit and the full multi-OS package check when needed.
 
 ## Development architecture
 
