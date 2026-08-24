@@ -51,6 +51,8 @@ jobs:
       ARADR_AUDIT_STANDARD_CHUNK_DAYS: ${{ inputs.standard_chunk_days || '3650' }}
       ARADR_AUDIT_REFERENCE_CHUNK_DAYS: ${{ inputs.reference_chunk_days || '730' }}
       ARADR_AUDIT_SLEEP_SECONDS: "0.75"
+      ARADR_DIAG_IDS: "SMV5M602,SMV5M104"
+      ARADR_DIAG_CHUNK_DAYS: "730"
 
     steps:
       - uses: actions/checkout@v4
@@ -73,6 +75,9 @@ jobs:
             echo "Repository secret ARAD_API_KEY is not configured."
             exit 1
           fi
+
+      - name: Diagnose raw duplicate keys
+        run: Rscript tools/diagnose-duplicates.R
 
       - name: Run staged live audit
         run: Rscript tools/live-audit.R
