@@ -16,18 +16,21 @@ navbar:
     right: [github]
 
 reference:
+  - title: "Discover and understand indicators"
+    contents:
+      - arad_catalog
+      - arad_find
+      - arad_info
+      - arad_search
+      - arad_indicators
+      - arad_dimensions
+      - arad_tree
+      - arad_snapshots
   - title: "Retrieve and reshape data"
     contents:
       - arad_get
       - arad_updates
       - arad_wide
-  - title: "Discover and understand indicators"
-    contents:
-      - arad_indicators
-      - arad_search
-      - arad_dimensions
-      - arad_tree
-      - arad_snapshots
   - title: "Caching"
     contents:
       - arad_cache_clear
