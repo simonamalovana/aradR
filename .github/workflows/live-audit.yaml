@@ -32,9 +32,13 @@ on:
         required: false
         default: "MBOPCAHDPPECY,MBOPCCHDPPECY"
       final_target_indicators:
-        description: "Higher-frequency indicators for final coverage"
+        description: "Optional explicit higher-frequency target; blank discovers dynamically"
         required: false
-        default: "MIRFMDF12ERATPECD"
+        default: ""
+      final_target_bases:
+        description: "Candidate bases for dynamic higher-frequency discovery"
+        required: false
+        default: "MIRF,SGFSDEF"
       standard_chunk_days:
         description: "Chunk size under test"
         required: true
@@ -52,6 +56,7 @@ on:
       - ".github/live-audit-trigger"
       - "tools/live-audit.R"
       - "tools/final-coverage-audit.R"
+      - "tools/discover-final-target.R"
       - ".github/workflows/live-audit.yaml"
 
 permissions: read-all
@@ -69,7 +74,8 @@ jobs:
       ARADR_AUDIT_SAMPLE_PER_STRATUM: ${{ inputs.sample_per_stratum || '1' }}
       ARADR_AUDIT_MULTI_SIZE: ${{ inputs.multi_size || '3' }}
       ARADR_AUDIT_SNAPSHOT_INDICATOR_IDS: ${{ inputs.snapshot_indicator_ids || 'MBOPCAHDPPECY,MBOPCCHDPPECY' }}
-      ARADR_FINAL_TARGET_INDICATORS: ${{ inputs.final_target_indicators || 'MIRFMDF12ERATPECD' }}
+      ARADR_FINAL_TARGET_INDICATORS: ${{ inputs.final_target_indicators || '' }}
+      ARADR_FINAL_TARGET_BASES: ${{ inputs.final_target_bases || 'MIRF,SGFSDEF' }}
       ARADR_AUDIT_STANDARD_CHUNK_DAYS: ${{ inputs.standard_chunk_days || '3650' }}
       ARADR_AUDIT_REFERENCE_CHUNK_DAYS: ${{ inputs.reference_chunk_days || '730' }}
       ARADR_FINAL_REFERENCE_CHUNK_DAYS: ${{ inputs.final_reference_chunk_days || '365' }}
@@ -98,10 +104,11 @@ jobs:
           fi
 
       - name: Run staged live audit
+        if: github.event_name == 'workflow_dispatch'
         run: Rscript tools/live-audit.R
 
       - name: Run final higher-frequency coverage audit
-        run: Rscript tools/final-coverage-audit.R
+        run: Rscript tools/discover-final-target.R
 
       - name: Upload audit artifacts
         if: always()
