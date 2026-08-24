@@ -1,10 +1,16 @@
+name: R-CMD-check
+
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
-
-name: R-CMD-check
+    paths:
+      - 'DESCRIPTION'
+      - 'NAMESPACE'
+      - 'R/**'
+      - 'tests/**'
+      - 'man/**'
+      - '.github/workflows/R-CMD-check.yaml'
+  workflow_dispatch:
 
 permissions: read-all
 
@@ -37,9 +43,9 @@ jobs:
           build_args: 'c("--no-manual")'
 
   full-check:
-    if: github.event_name == 'push'
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ${{ matrix.config.os }}
-    name: ${{ matrix.config.os }} (${{ matrix.config.r }}, main)
+    name: ${{ matrix.config.os }} (${{ matrix.config.r }}, release)
 
     strategy:
       fail-fast: false
