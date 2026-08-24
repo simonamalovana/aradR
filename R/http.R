@@ -43,13 +43,45 @@ arad_request_raw <- function(endpoint,
   httr2::resp_body_raw(response)
 }
 
-arad_request <- function(endpoint, query, api_key, base_url = NULL) {
+arad_request <- function(endpoint,
+                         query,
+                         api_key,
+                         base_url = NULL,
+                         cache = NULL,
+                         cache_dir = NULL,
+                         cache_max_age = NULL) {
+  base_url <- arad_base_url(base_url)
+  api_key <- arad_api_key(api_key)
+  cache <- arad_cache_mode(cache)
+  cache_max_age <- arad_cache_age(cache_max_age)
+  key <- arad_cache_key(endpoint, query, base_url, api_key)
+
+  cached <- arad_cache_get(
+    key,
+    mode = cache,
+    max_age = cache_max_age,
+    cache_dir = cache_dir
+  )
+  if (!is.null(cached)) {
+    attr(cached, "arad_cache_hit") <- TRUE
+    return(cached)
+  }
+
   request_fn <- getOption("aradR.request_fn")
   if (!is.null(request_fn)) {
     if (!is.function(request_fn)) {
       arad_abort("Option `aradR.request_fn` must be a function.", "arad_input_error")
     }
-    return(request_fn(endpoint = endpoint, query = query, api_key = api_key, base_url = base_url))
+    raw <- request_fn(endpoint = endpoint, query = query, api_key = api_key, base_url = base_url)
+  } else {
+    raw <- arad_request_raw(endpoint = endpoint, query = query, api_key = api_key, base_url = base_url)
   }
-  arad_request_raw(endpoint = endpoint, query = query, api_key = api_key, base_url = base_url)
+
+  if (!is.raw(raw)) {
+    arad_abort("ARAD request function must return raw bytes.", "arad_parse_error")
+  }
+
+  arad_cache_set(key, raw, mode = cache, cache_dir = cache_dir)
+  attr(raw, "arad_cache_hit") <- FALSE
+  raw
 }

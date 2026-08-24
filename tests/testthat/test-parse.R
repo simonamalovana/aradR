@@ -16,6 +16,23 @@ test_that("data parser preserves genuine missing values", {
   expect_s3_class(data$period, "Date")
 })
 
+test_that("parser accepts raw responses carrying request diagnostics", {
+  raw <- charToRaw(paste(
+    c(
+      "indicator_id;snapshot_id;period;value",
+      "X1;;20200101;1.5"
+    ),
+    collapse = "\r\n"
+  ))
+  attr(raw, "arad_cache_hit") <- FALSE
+
+  data <- aradR:::arad_parse_data_response(raw, encoding = "UTF-8")
+
+  expect_equal(nrow(data), 1L)
+  expect_equal(data$value[[1]], 1.5)
+  expect_false(isTRUE(attr(raw, "arad_cache_hit")))
+})
+
 test_that("non-missing invalid numeric values fail loudly", {
   csv <- paste(
     c(

@@ -2,7 +2,10 @@ arad_updates_selector <- function(selector,
                                   snapshot_value = NULL,
                                   api_key,
                                   base_url = NULL,
-                                  encoding = "windows-1250") {
+                                  encoding = "windows-1250",
+                                  cache = NULL,
+                                  cache_dir = NULL,
+                                  cache_max_age = NULL) {
   query <- c(
     arad_selector_query(selector),
     list(delimiter = "semicolon")
@@ -11,8 +14,18 @@ arad_updates_selector <- function(selector,
     query$snapshot_id_list <- snapshot_value
   }
 
-  raw <- arad_request("updates", query = query, api_key = api_key, base_url = base_url)
-  arad_parse_updates_response(raw, encoding = encoding)
+  raw <- arad_request(
+    "updates",
+    query = query,
+    api_key = api_key,
+    base_url = base_url,
+    cache = cache,
+    cache_dir = cache_dir,
+    cache_max_age = cache_max_age
+  )
+  out <- arad_parse_updates_response(raw, encoding = encoding)
+  attr(out, "arad_cache_hit") <- isTRUE(attr(raw, "arad_cache_hit"))
+  out
 }
 
 #' Retrieve ARAD update metadata
@@ -28,6 +41,9 @@ arad_updates_selector <- function(selector,
 #' @param api_key ARAD API key. If `NULL`, `ARAD_API_KEY` is used.
 #' @param base_url ARAD API base URL. Primarily intended for testing.
 #' @param encoding Response encoding. Defaults to Windows-1250 as documented by ARAD.
+#' @param cache Response cache: `"none"`, `"session"`, or `"disk"`.
+#' @param cache_dir Optional disk cache directory.
+#' @param cache_max_age Maximum cache age in seconds; defaults to `Inf`.
 #'
 #' @return A tibble with `indicator_id`, `snapshot_id`, `update_date`,
 #'   `data_from`, and `data_to`.
@@ -39,7 +55,10 @@ arad_updates <- function(indicator_ids = NULL,
                          snapshot_ids = NULL,
                          api_key = NULL,
                          base_url = NULL,
-                         encoding = "windows-1250") {
+                         encoding = "windows-1250",
+                         cache = NULL,
+                         cache_dir = NULL,
+                         cache_max_age = NULL) {
   selector <- arad_selector(
     indicator_ids = indicator_ids,
     set_id = set_id,
@@ -54,7 +73,10 @@ arad_updates <- function(indicator_ids = NULL,
     snapshot_value = snapshot_value,
     api_key = api_key,
     base_url = base_url,
-    encoding = encoding
+    encoding = encoding,
+    cache = cache,
+    cache_dir = cache_dir,
+    cache_max_age = cache_max_age
   )
 }
 
@@ -117,6 +139,9 @@ arad_attach_diagnostics <- function(data,
 #' @param api_key ARAD API key. If `NULL`, `ARAD_API_KEY` is used.
 #' @param base_url ARAD API base URL. Primarily intended for testing.
 #' @param encoding Response encoding. Defaults to Windows-1250 as documented by ARAD.
+#' @param cache Response cache: `"none"`, `"session"`, or `"disk"`.
+#' @param cache_dir Optional disk cache directory.
+#' @param cache_max_age Maximum cache age in seconds; defaults to `Inf`.
 #'
 #' @return A tibble with `indicator_id`, `snapshot_id`, `period`, and `value`.
 #'   Retrieval diagnostics are stored in the `arad_diagnostics` attribute.
@@ -133,7 +158,10 @@ arad_get <- function(indicator_ids = NULL,
                      chunk_days = getOption("aradR.chunk_days", 3650L),
                      api_key = NULL,
                      base_url = NULL,
-                     encoding = "windows-1250") {
+                     encoding = "windows-1250",
+                     cache = NULL,
+                     cache_dir = NULL,
+                     cache_max_age = NULL) {
   strategy <- match.arg(strategy)
   selector <- arad_selector(
     indicator_ids = indicator_ids,
@@ -169,7 +197,10 @@ arad_get <- function(indicator_ids = NULL,
   if (!is.null(months_before)) {
     query <- base_query
     query$months_before <- months_before
-    raw <- arad_request("data", query = query, api_key = api_key, base_url = base_url)
+    raw <- arad_request(
+      "data", query = query, api_key = api_key, base_url = base_url,
+      cache = cache, cache_dir = cache_dir, cache_max_age = cache_max_age
+    )
     data <- arad_parse_data_response(raw, encoding = encoding)
     arad_validate_expected_indicators(data, selector)
     return(arad_attach_diagnostics(
@@ -184,7 +215,10 @@ arad_get <- function(indicator_ids = NULL,
     query <- base_query
     if (!is.null(from)) query$period_from <- arad_date_param(from)
     if (!is.null(to)) query$period_to <- arad_date_param(to)
-    raw <- arad_request("data", query = query, api_key = api_key, base_url = base_url)
+    raw <- arad_request(
+      "data", query = query, api_key = api_key, base_url = base_url,
+      cache = cache, cache_dir = cache_dir, cache_max_age = cache_max_age
+    )
     data <- arad_parse_data_response(raw, encoding = encoding)
     arad_validate_expected_indicators(data, selector)
     return(arad_attach_diagnostics(
@@ -207,7 +241,10 @@ arad_get <- function(indicator_ids = NULL,
       snapshot_value = snapshot_value,
       api_key = api_key,
       base_url = base_url,
-      encoding = encoding
+      encoding = encoding,
+      cache = cache,
+      cache_dir = cache_dir,
+      cache_max_age = cache_max_age
     )
     updates_requests <- 1L
 
@@ -255,7 +292,10 @@ arad_get <- function(indicator_ids = NULL,
     query <- base_query
     query$period_from <- arad_date_param(chunks[[i]]$from)
     query$period_to <- arad_date_param(chunks[[i]]$to)
-    raw <- arad_request("data", query = query, api_key = api_key, base_url = base_url)
+    raw <- arad_request(
+      "data", query = query, api_key = api_key, base_url = base_url,
+      cache = cache, cache_dir = cache_dir, cache_max_age = cache_max_age
+    )
     pieces[[i]] <- arad_parse_data_response(raw, encoding = encoding)
   }
 

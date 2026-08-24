@@ -1,0 +1,83 @@
+name: Live ARAD audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      set_ids:
+        description: "Comma-separated ARAD set IDs"
+        required: true
+        default: "1058"
+      max_series:
+        description: "Maximum sampled single series"
+        required: true
+        default: "12"
+      sample_per_stratum:
+        description: "Series per frequency/history stratum"
+        required: true
+        default: "2"
+      multi_size:
+        description: "Indicators in one multi-series request"
+        required: true
+        default: "3"
+      snapshot_indicator_ids:
+        description: "Comma-separated snapshot-backed smoke indicators; blank disables"
+        required: false
+        default: "MIRFMSD1XXRATPECQ"
+      standard_chunk_days:
+        description: "Chunk size under test"
+        required: true
+        default: "3650"
+      reference_chunk_days:
+        description: "Fine reference chunk size"
+        required: true
+        default: "730"
+
+permissions: read-all
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      ARAD_API_KEY: ${{ secrets.ARAD_API_KEY }}
+      ARADR_AUDIT_SET_IDS: ${{ inputs.set_ids }}
+      ARADR_AUDIT_MAX_SERIES: ${{ inputs.max_series }}
+      ARADR_AUDIT_SAMPLE_PER_STRATUM: ${{ inputs.sample_per_stratum }}
+      ARADR_AUDIT_MULTI_SIZE: ${{ inputs.multi_size }}
+      ARADR_AUDIT_SNAPSHOT_INDICATOR_IDS: ${{ inputs.snapshot_indicator_ids }}
+      ARADR_AUDIT_STANDARD_CHUNK_DAYS: ${{ inputs.standard_chunk_days }}
+      ARADR_AUDIT_REFERENCE_CHUNK_DAYS: ${{ inputs.reference_chunk_days }}
+      ARADR_AUDIT_SLEEP_SECONDS: "0.75"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          needs: check
+
+      - name: Install aradR
+        run: R CMD INSTALL .
+
+      - name: Verify API key exists
+        shell: bash
+        run: |
+          if [ -z "$ARAD_API_KEY" ]; then
+            echo "Repository secret ARAD_API_KEY is not configured."
+            exit 1
+          fi
+
+      - name: Run staged live audit
+        run: Rscript tools/live-audit.R
+
+      - name: Upload audit artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aradR-live-audit
+          path: audit-results/
+          if-no-files-found: warn

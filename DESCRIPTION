@@ -13,6 +13,8 @@ Description: Provides a reliability-first interface to the Czech National Bank
 License: MIT + file LICENSE
 Encoding: UTF-8
 Language: en
+Depends:
+    R (>= 4.1.0)
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports:
