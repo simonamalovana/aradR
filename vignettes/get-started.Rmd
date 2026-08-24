@@ -14,10 +14,11 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 `aradR` is a reliability-first R client for the Czech National Bank ARAD API. A typical workflow is:
 
 1. configure an ARAD API key;
-2. discover the indicator you need;
-3. retrieve a bounded or full history;
-4. reshape the result if a wide table is more convenient;
-5. inspect retrieval diagnostics when reproducibility matters.
+2. browse or search a scoped ARAD catalogue without knowing indicator IDs;
+3. inspect candidate metadata;
+4. retrieve a bounded or full history;
+5. reshape the result if a wide table is more convenient;
+6. inspect retrieval diagnostics when reproducibility matters.
 
 ## Install
 
@@ -42,14 +43,16 @@ Restart R after editing `.Renviron`. Never commit the key to a repository, noteb
 
 ## Discover indicators
 
-ARAD metadata endpoints are scoped. Start from a known set, base, selection, or indicator ID.
+ARAD metadata endpoints are scoped. Start from a known set, base, selection, or indicator ID; `aradR` then removes the need to know individual series IDs in advance.
 
 ```r
 library(aradR)
 
-indicators <- arad_indicators(set_id = 1058, lang = "en")
+# Browse every indicator in a scope with path and availability metadata
+catalog <- arad_catalog(set_id = 1058, lang = "en")
 
-hits <- arad_search(
+# Search names, hierarchy paths and dimension labels/values
+hits <- arad_find(
   "inflation",
   set_id = 1058,
   lang = "en"
@@ -58,26 +61,41 @@ hits <- arad_search(
 hits
 ```
 
-Use `arad_dimensions()` when you need dimensional definitions and `arad_tree()` when you need the indicator's place in the ARAD hierarchy.
+`arad_find()` returns one row per matching indicator. With its default `details = TRUE`, it also includes `data_from`, `data_to`, `last_update`, and `snapshot_contexts`.
+
+If you only need a lightweight name/ID search, use `arad_search()` instead.
 
 ```r
-dims <- arad_dimensions(indicator_ids = hits$indicator_id)
-paths <- arad_tree(indicator_ids = hits$indicator_id, lang = "en")
+quick_hits <- arad_search("inflation", set_id = 1058, lang = "en")
 ```
+
+## Inspect a candidate
+
+Before downloading data, inspect the selected series in detail:
+
+```r
+info <- arad_info(hits$indicator_id[1], lang = "en")
+
+info$summary
+info$dimensions
+info$updates
+```
+
+The summary combines basic metadata, hierarchy path and availability. The other list elements preserve detailed dimension definitions and update rows.
 
 ## Retrieve data
 
 For a full available history, omit the date boundaries. `aradR` resolves the range through `/updates` and divides long histories into bounded requests.
 
 ```r
-x <- arad_get(indicator_ids = "SMV5M603")
+x <- arad_get(indicator_ids = hits$indicator_id[1])
 ```
 
 For a reproducible analytical window, specify dates explicitly:
 
 ```r
 x <- arad_get(
-  indicator_ids = c("SMV5M601", "SMV5M603"),
+  indicator_ids = hits$indicator_id[1],
   from = "2015-01-01",
   to = "2026-01-01"
 )

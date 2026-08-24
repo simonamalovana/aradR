@@ -6,7 +6,7 @@ Modern R client and toolkit for the Czech National Bank ARAD API.
 
 ## Project status
 
-**Pre-release (`0.1.0`).** The core retrieval and metadata APIs are usable and tested, but the public API may still change before a first stable release. The repository is currently private.
+**Pre-release (`0.2.0`).** The core retrieval API is reliability-calibrated and the package now includes a higher-level discovery workflow. The public API may still change before a first stable release. The repository is currently private.
 
 ## Install
 
@@ -28,17 +28,23 @@ Store your ARAD API key outside source code, preferably in `~/.Renviron`:
 ARAD_API_KEY=your_key_here
 ```
 
-Then discover and retrieve data:
+Then browse, find, inspect and retrieve data:
 
 ```r
 library(aradR)
 
-# Search within a known ARAD scope
-hits <- arad_search("inflation", set_id = 1058, lang = "en")
+# Browse a known ARAD scope without knowing indicator IDs
+catalog <- arad_catalog(set_id = 1058, lang = "en")
 
-# Retrieve one or more indicators
+# Human-readable search across names, hierarchy paths and dimensions
+hits <- arad_find("inflation", set_id = 1058, lang = "en")
+
+# Inspect a candidate before downloading observations
+info <- arad_info(hits$indicator_id[1], lang = "en")
+
+# Retrieve the selected series
 x <- arad_get(
-  indicator_ids = c("SMV5M601", "SMV5M603"),
+  indicator_ids = hits$indicator_id[1],
   from = "2015-01-01",
   to = "2026-01-01"
 )
@@ -47,13 +53,36 @@ x <- arad_get(
 wide <- arad_wide(x)
 ```
 
-For a full available history, omit `from` and `to`:
-
-```r
-x <- arad_get(indicator_ids = "SMV5M603")
-```
+For a full available history, omit `from` and `to`.
 
 Exactly one ARAD selector is accepted where a scoped endpoint requires one: `indicator_ids`, `set_id`, `base_id`, or `selection_id`.
+
+## Discovery workflow
+
+ARAD's metadata endpoints are scoped: they do not expose one unscoped global indicator catalogue. `aradR` therefore keeps the scope explicit while removing the need to know indicator IDs in advance.
+
+```r
+# One row per indicator, including hierarchy path and availability
+catalog <- arad_catalog(base_id = "MBOP", lang = "en")
+
+# Rich human-readable search
+hits <- arad_find(
+  "households",
+  base_id = "MBOP",
+  lang = "en",
+  frequency = "M"
+)
+
+# Detailed metadata for selected candidates
+info <- arad_info(hits$indicator_id[1], lang = "en")
+info$summary
+info$dimensions
+info$updates
+```
+
+`arad_find()` searches indicator names/IDs and ARAD hierarchy paths and, by default, base/dimension labels and values. With `details = TRUE` it adds available data boundaries, latest update timestamp and snapshot-context count only for the matched indicators.
+
+`arad_search()` remains available as a faster, lightweight search over indicator names and IDs when hierarchy/dimension discovery is not needed.
 
 ## Why aradR
 
@@ -62,7 +91,7 @@ Exactly one ARAD selector is accepted where a scoped endpoint requires one: `ind
 - genuine missing values preserved rather than silently dropped;
 - safe handling of identical cross-chunk boundary overlaps;
 - explicit errors for conflicting duplicate observations;
-- scoped discovery and metadata helpers;
+- human-readable scoped discovery and metadata inspection;
 - snapshot support;
 - opt-in session or disk caching;
 - retrieval diagnostics for reproducibility;
@@ -80,27 +109,16 @@ Retrieval details are attached to results:
 attr(x, "arad_diagnostics")
 ```
 
-## Discovery and metadata
+## Lower-level metadata helpers
 
 ```r
-# Basic metadata
 ind <- arad_indicators(set_id = 1058, lang = "en")
-
-# Scoped text/frequency search
 hits <- arad_search("inflation", set_id = 1058, lang = "en")
-
-# Dimensions and hierarchy
 dims <- arad_dimensions(indicator_ids = hits$indicator_id)
 paths <- arad_tree(indicator_ids = hits$indicator_id, lang = "en")
-
-# Available snapshots
 snaps <- arad_snapshots(lang = "en")
-
-# Availability / update metadata
 updates <- arad_updates(indicator_ids = hits$indicator_id)
 ```
-
-ARAD metadata endpoints are scoped; `aradR` does not assume that `/indicators` is a global unscoped catalogue.
 
 ## Wide output
 
@@ -117,10 +135,8 @@ wide <- arad_wide(x)
 Caching is explicit and disabled by default:
 
 ```r
-# Reuse responses during this R session
 x <- arad_get("SMV5M603", cache = "session")
 
-# Persist raw responses on disk
 x <- arad_get(
   "SMV5M603",
   cache = "disk",
