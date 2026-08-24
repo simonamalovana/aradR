@@ -64,3 +64,28 @@ test_that("audit sampling is stratified and bounded", {
   )
   expect_equal(sample$indicator_id, again$indicator_id)
 })
+
+test_that("singleton audit strata always preserve their member", {
+  indicators <- tibble::tibble(
+    indicator_id = c("I1", "I2", "I3"),
+    frequency_code = c("M", "Q", "A")
+  )
+  updates <- tibble::tibble(
+    indicator_id = c("I1", "I2", "I3"),
+    snapshot_id = NA_character_,
+    update_date = as.POSIXct(rep("2026-01-01", 3), tz = "UTC"),
+    data_from = as.Date(rep("2024-01-01", 3)),
+    data_to = as.Date(rep("2026-01-01", 3))
+  )
+
+  for (seed in seq_len(20L)) {
+    sampled <- aradR:::arad_audit_sample(
+      indicators,
+      updates,
+      sample_per_stratum = 1,
+      max_series = 3,
+      seed = seed
+    )
+    expect_setequal(sampled$indicator_id, indicators$indicator_id)
+  }
+})
