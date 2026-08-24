@@ -135,7 +135,7 @@ arad_attach_diagnostics <- function(data,
 #' @param strategy Retrieval strategy. `"auto"` uses bounded requests;
 #'   `"direct"` makes one `/data` request.
 #' @param chunk_days Maximum inclusive date span of each automatic chunk.
-#'   The current default is provisional pending the live regression benchmark.
+#'   The 3650-day default is calibrated by the package's live reliability audit.
 #' @param api_key ARAD API key. If `NULL`, `ARAD_API_KEY` is used.
 #' @param base_url ARAD API base URL. Primarily intended for testing.
 #' @param encoding Response encoding. Defaults to Windows-1250 as documented by ARAD.
