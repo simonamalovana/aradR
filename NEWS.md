@@ -1,3 +1,14 @@
+# aradR 0.2.0 (pre-release)
+
+## Discovery UX
+
+- Added `arad_catalog()` for one-row-per-indicator browsing within an ARAD set, base, selection or explicit indicator list.
+- Added `arad_find()` as a higher-level human-readable search across indicator names/IDs, ARAD hierarchy paths and, by default, base/dimension labels and values.
+- `arad_find(details = TRUE)` enriches only matched indicators with available data boundaries, latest update timestamp and snapshot-context count.
+- Added `arad_info()` for inspecting selected candidate series through a compact summary plus detailed dimensions and raw update rows.
+- Kept `arad_search()` unchanged as the fast, lightweight name/ID search for backwards compatibility.
+- Updated onboarding and reference documentation around a browse → find → inspect → retrieve workflow.
+
 # aradR 0.1.0 (pre-release)
 
 ## Reliability core
