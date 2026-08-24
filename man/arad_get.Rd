@@ -15,7 +15,10 @@ arad_get(
   chunk_days = getOption("aradR.chunk_days", 3650L),
   api_key = NULL,
   base_url = NULL,
-  encoding = "windows-1250"
+  encoding = "windows-1250",
+  cache = NULL,
+  cache_dir = NULL,
+  cache_max_age = NULL
 )
 }
 \arguments{
@@ -32,10 +35,13 @@ arad_get(
 \item{api_key}{ARAD API key. If NULL, ARAD_API_KEY is used.}
 \item{base_url}{ARAD API base URL. Primarily intended for testing.}
 \item{encoding}{Response encoding. Defaults to Windows-1250.}
+\item{cache}{Response cache mode: none, session, or disk. NULL uses the aradR.cache option, defaulting to none.}
+\item{cache_dir}{Optional disk cache directory.}
+\item{cache_max_age}{Maximum cache age in seconds. NULL uses the aradR.cache_max_age option, defaulting to Inf.}
 }
 \value{
 A tibble with columns indicator_id, snapshot_id, period, and value. Retrieval diagnostics are stored in the arad_diagnostics attribute.
 }
 \description{
-Reliability-first retrieval of ARAD time series. Exactly one selector must be supplied. With strategy = "auto", long date ranges are split into deterministic, non-overlapping chunks; omitted boundaries are resolved through the ARAD updates endpoint.
+Reliability-first retrieval of ARAD time series. Exactly one selector must be supplied. With strategy = "auto", long date ranges are split into deterministic, non-overlapping chunks; omitted boundaries are resolved through the ARAD updates endpoint. Optional raw-response caching is explicit and disabled by default.
 }
