@@ -5,24 +5,32 @@ on:
     inputs:
       set_ids:
         description: "Comma-separated ARAD set IDs"
+        required: false
+        default: "1058,1032,1115"
+      base_ids:
+        description: "Comma-separated ARAD base IDs"
+        required: false
+        default: "MBOP,SHDPZDR"
+      max_per_scope:
+        description: "Maximum sampled series per set/base"
         required: true
-        default: "1058"
+        default: "2"
       max_series:
-        description: "Maximum sampled single series"
+        description: "Maximum sampled single series overall"
         required: true
-        default: "12"
+        default: "10"
       sample_per_stratum:
         description: "Series per frequency/history stratum"
         required: true
-        default: "2"
+        default: "1"
       multi_size:
         description: "Indicators in one multi-series request"
         required: true
         default: "3"
       snapshot_indicator_ids:
-        description: "Comma-separated snapshot-backed smoke indicators; blank disables"
+        description: "Comma-separated snapshot-backed indicators; blank disables"
         required: false
-        default: "MIRFMSD1XXRATPECQ"
+        default: "MBOPCAHDPPECY,MBOPCCHDPPECY"
       standard_chunk_days:
         description: "Chunk size under test"
         required: true
@@ -34,6 +42,8 @@ on:
   pull_request:
     paths:
       - ".github/live-audit-trigger"
+      - "tools/live-audit.R"
+      - ".github/workflows/live-audit.yaml"
 
 permissions: read-all
 
@@ -43,16 +53,16 @@ jobs:
     timeout-minutes: 60
     env:
       ARAD_API_KEY: ${{ secrets.ARAD_API_KEY }}
-      ARADR_AUDIT_SET_IDS: ${{ inputs.set_ids || '1058' }}
-      ARADR_AUDIT_MAX_SERIES: ${{ inputs.max_series || '12' }}
-      ARADR_AUDIT_SAMPLE_PER_STRATUM: ${{ inputs.sample_per_stratum || '2' }}
+      ARADR_AUDIT_SET_IDS: ${{ inputs.set_ids || '1058,1032,1115' }}
+      ARADR_AUDIT_BASE_IDS: ${{ inputs.base_ids || 'MBOP,SHDPZDR' }}
+      ARADR_AUDIT_MAX_PER_SCOPE: ${{ inputs.max_per_scope || '2' }}
+      ARADR_AUDIT_MAX_SERIES: ${{ inputs.max_series || '10' }}
+      ARADR_AUDIT_SAMPLE_PER_STRATUM: ${{ inputs.sample_per_stratum || '1' }}
       ARADR_AUDIT_MULTI_SIZE: ${{ inputs.multi_size || '3' }}
-      ARADR_AUDIT_SNAPSHOT_INDICATOR_IDS: ${{ inputs.snapshot_indicator_ids || 'MIRFMSD1XXRATPECQ' }}
+      ARADR_AUDIT_SNAPSHOT_INDICATOR_IDS: ${{ inputs.snapshot_indicator_ids || 'MBOPCAHDPPECY,MBOPCCHDPPECY' }}
       ARADR_AUDIT_STANDARD_CHUNK_DAYS: ${{ inputs.standard_chunk_days || '3650' }}
       ARADR_AUDIT_REFERENCE_CHUNK_DAYS: ${{ inputs.reference_chunk_days || '730' }}
       ARADR_AUDIT_SLEEP_SECONDS: "0.75"
-      ARADR_DIAG_IDS: "SMV5M602,SMV5M104"
-      ARADR_DIAG_CHUNK_DAYS: "730"
 
     steps:
       - uses: actions/checkout@v4
@@ -75,9 +85,6 @@ jobs:
             echo "Repository secret ARAD_API_KEY is not configured."
             exit 1
           fi
-
-      - name: Diagnose raw duplicate keys
-        run: Rscript tools/diagnose-duplicates.R
 
       - name: Run staged live audit
         run: Rscript tools/live-audit.R
