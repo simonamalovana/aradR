@@ -1,4 +1,4 @@
 Live ARAD audit trigger
 Requested: 2026-08-24
-Purpose: confirm cross-chunk duplicate values in staged reliability audit
-Attempt: 3
+Purpose: validate live retrieval after safe chunk-boundary deduplication fix
+Attempt: 4
