@@ -294,7 +294,13 @@ arad_search <- function(term,
   )
 
   matcher <- function(x) {
-    grepl(term, x, ignore.case = ignore_case, fixed = !regex)
+    if (regex) {
+      return(grepl(term, x, ignore.case = ignore_case))
+    }
+    if (ignore_case) {
+      return(grepl(tolower(term), tolower(x), fixed = TRUE))
+    }
+    grepl(term, x, fixed = TRUE)
   }
   keep <- matcher(indicators$indicator_id) | matcher(indicators$indicator_name)
 
