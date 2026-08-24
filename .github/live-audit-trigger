@@ -1,3 +1,4 @@
 Live ARAD audit trigger
 Requested: 2026-08-24
-Purpose: staged reliability audit after PR #3 merge
+Purpose: diagnose duplicate keys in staged reliability audit after PR #3 merge
+Attempt: 2
