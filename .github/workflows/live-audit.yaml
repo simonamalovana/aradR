@@ -31,6 +31,9 @@ on:
         description: "Fine reference chunk size"
         required: true
         default: "730"
+  pull_request:
+    paths:
+      - ".github/live-audit-trigger"
 
 permissions: read-all
 
@@ -40,13 +43,13 @@ jobs:
     timeout-minutes: 60
     env:
       ARAD_API_KEY: ${{ secrets.ARAD_API_KEY }}
-      ARADR_AUDIT_SET_IDS: ${{ inputs.set_ids }}
-      ARADR_AUDIT_MAX_SERIES: ${{ inputs.max_series }}
-      ARADR_AUDIT_SAMPLE_PER_STRATUM: ${{ inputs.sample_per_stratum }}
-      ARADR_AUDIT_MULTI_SIZE: ${{ inputs.multi_size }}
-      ARADR_AUDIT_SNAPSHOT_INDICATOR_IDS: ${{ inputs.snapshot_indicator_ids }}
-      ARADR_AUDIT_STANDARD_CHUNK_DAYS: ${{ inputs.standard_chunk_days }}
-      ARADR_AUDIT_REFERENCE_CHUNK_DAYS: ${{ inputs.reference_chunk_days }}
+      ARADR_AUDIT_SET_IDS: ${{ inputs.set_ids || '1058' }}
+      ARADR_AUDIT_MAX_SERIES: ${{ inputs.max_series || '12' }}
+      ARADR_AUDIT_SAMPLE_PER_STRATUM: ${{ inputs.sample_per_stratum || '2' }}
+      ARADR_AUDIT_MULTI_SIZE: ${{ inputs.multi_size || '3' }}
+      ARADR_AUDIT_SNAPSHOT_INDICATOR_IDS: ${{ inputs.snapshot_indicator_ids || 'MIRFMSD1XXRATPECQ' }}
+      ARADR_AUDIT_STANDARD_CHUNK_DAYS: ${{ inputs.standard_chunk_days || '3650' }}
+      ARADR_AUDIT_REFERENCE_CHUNK_DAYS: ${{ inputs.reference_chunk_days || '730' }}
       ARADR_AUDIT_SLEEP_SECONDS: "0.75"
 
     steps:
