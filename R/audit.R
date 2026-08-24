@@ -114,7 +114,11 @@ arad_audit_sample <- function(indicators,
   split_rows <- split(seq_len(nrow(bounds)), stratum)
   set.seed(seed)
   selected <- unlist(lapply(split_rows, function(rows) {
-    sample(rows, min(length(rows), sample_per_stratum))
+    if (length(rows) <= sample_per_stratum) {
+      rows
+    } else {
+      sample(rows, sample_per_stratum)
+    }
   }), use.names = FALSE)
   selected <- unique(selected)
   if (length(selected) > max_series) {
