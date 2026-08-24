@@ -72,10 +72,22 @@ arad_parse_indicators_response <- function(raw, encoding = "windows-1250") {
 arad_parse_dimensions_response <- function(raw, encoding = "windows-1250") {
   endpoint <- "indicators-dims"
   expected <- c(
-    "indicator_id", "base_id", "base_name", "dim_code", "dim_name",
+    "indicator_id", "base_name", "dim_code", "dim_name",
     "dim_value_code", "dim_value_name", "dim_rank"
   )
   table <- arad_read_character_table(raw, endpoint, expected, encoding)
+
+  base_column <- if ("base_id" %in% names(table)) {
+    "base_id"
+  } else if ("base_code" %in% names(table)) {
+    "base_code"
+  } else {
+    arad_abort(
+      "ARAD `/indicators-dims` response is missing required column `base_id` or `base_code`.",
+      "arad_parse_error"
+    )
+  }
+
   if (nrow(table) == 0L) {
     return(tibble::tibble(
       indicator_id = character(), base_id = character(), base_name = character(),
@@ -83,10 +95,17 @@ arad_parse_dimensions_response <- function(raw, encoding = "windows-1250") {
       dim_value_name = character(), dim_rank = integer()
     ))
   }
-  arad_validate_required_text(table, c("indicator_id", "base_id"), endpoint)
+  arad_validate_required_text(table, "indicator_id", endpoint)
+  base_values <- table[[base_column]]
+  if (anyNA(base_values) || any(!nzchar(trimws(base_values)))) {
+    arad_abort(
+      sprintf("ARAD `/%s` returned a missing or empty `%s`.", endpoint, base_column),
+      "arad_integrity_error"
+    )
+  }
   tibble::tibble(
     indicator_id = trimws(table$indicator_id),
-    base_id = trimws(table$base_id),
+    base_id = trimws(base_values),
     base_name = table$base_name,
     dim_code = table$dim_code,
     dim_name = table$dim_name,
