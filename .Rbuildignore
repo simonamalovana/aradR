@@ -2,3 +2,7 @@
 ^\.Rproj\.user$
 ^\.github$
 ^NOTICE\.md$
+^_pkgdown\.yml$
+^docs$
+^tools$
+^CONTRIBUTING\.md$

@@ -1,13 +1,14 @@
-# aradR (development version)
+# aradR 0.1.0 (pre-release)
 
 ## Reliability core
 
 - Added the initial public API: `arad_get()` and `arad_updates()`.
 - Added strict exactly-one-selector validation for indicator, set, base, and user-selection requests.
 - Added character-first ARAD CSV ingestion followed by explicit date and numeric parsing.
-- Added integrity checks for required columns, malformed non-missing values, and duplicate observation keys.
+- Added integrity checks for required columns, malformed non-missing values, and conflicting duplicate observation keys.
 - Added deterministic chunking for long histories and `/updates`-based boundary discovery.
-- Added request retries, API-key redaction, retrieval diagnostics, unit tests, and an opt-in live long-range regression test.
+- Added safe collapse of identical cross-chunk boundary overlaps.
+- Added request retries, API-key redaction, retrieval diagnostics, unit tests, and opt-in live regression tooling.
 
 ## Discovery and metadata
 
@@ -17,16 +18,23 @@
 - Added `arad_snapshots()` for snapshot discovery.
 - Added `arad_search()` for scoped local search over indicator IDs and names, including frequency filtering.
 
+## User workflow
+
+- Added `arad_wide()` for safe long-to-wide reshaping with automatic snapshot disambiguation.
+- Added an end-to-end Get Started vignette.
+- Added a troubleshooting guide, contribution guidance, package citation metadata, and pkgdown site configuration.
+- Reworked the README around installation and a discovery → retrieval → reshape workflow.
+
 ## Caching and validation
 
 - Added explicit `none`, `session`, and `disk` raw-response cache modes; caching remains disabled by default.
 - Added `arad_cache_clear()` and configurable cache age/location.
 - Cache entries are credential-separated using a one-way API-key hash; API keys are not persisted.
-- Added automated tests for metadata schemas, caching behavior and malformed metadata.
+- Added automated tests for metadata schemas, caching behaviour, malformed metadata, and wide reshaping.
 
 ## Live audit
 
-- Added stratified audit sampling by frequency and history length.
-- Added direct-vs-standard-vs-fine-chunk comparison logic that distinguishes key, missing-value and numeric mismatches.
-- Added `tools/live-audit.R` and a manual GitHub Actions workflow that uploads audit artifacts.
-- The live audit is deliberately sampled and rate-limited to avoid excessive ARAD API load.
+- Added stratified audit sampling and comparison logic that distinguishes key, missing-value, and numeric mismatches.
+- Completed the initial M/Q/Y/D, multi-indicator and snapshot-backed reliability calibration.
+- Retained the 3650-day production chunk size after exact agreement with finer references across the completed audit matrix.
+- CI is cost-controlled: routine package PRs use one Ubuntu check, while the broader live audit and multi-OS checks are reserved for justified reliability/release validation.
