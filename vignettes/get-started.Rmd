@@ -1,0 +1,150 @@
+---
+title: "Get started with aradR"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Get started with aradR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+```
+
+`aradR` is a reliability-first R client for the Czech National Bank ARAD API. A typical workflow is:
+
+1. configure an ARAD API key;
+2. discover the indicator you need;
+3. retrieve a bounded or full history;
+4. reshape the result if a wide table is more convenient;
+5. inspect retrieval diagnostics when reproducibility matters.
+
+## Install
+
+During development, install from GitHub:
+
+```r
+pak::pak("simonamalovana/aradR")
+# alternatively: remotes::install_github("simonamalovana/aradR")
+```
+
+The repository is currently private, so installation requires GitHub access until the project is made public.
+
+## Configure the API key
+
+Create an ARAD API key in your ARAD account and store it outside source code. A convenient place is `~/.Renviron`:
+
+```text
+ARAD_API_KEY=your_key_here
+```
+
+Restart R after editing `.Renviron`. Never commit the key to a repository, notebook, vignette, screenshot, or example output.
+
+## Discover indicators
+
+ARAD metadata endpoints are scoped. Start from a known set, base, selection, or indicator ID.
+
+```r
+library(aradR)
+
+indicators <- arad_indicators(set_id = 1058, lang = "en")
+
+hits <- arad_search(
+  "inflation",
+  set_id = 1058,
+  lang = "en"
+)
+
+hits
+```
+
+Use `arad_dimensions()` when you need dimensional definitions and `arad_tree()` when you need the indicator's place in the ARAD hierarchy.
+
+```r
+dims <- arad_dimensions(indicator_ids = hits$indicator_id)
+paths <- arad_tree(indicator_ids = hits$indicator_id, lang = "en")
+```
+
+## Retrieve data
+
+For a full available history, omit the date boundaries. `aradR` resolves the range through `/updates` and divides long histories into bounded requests.
+
+```r
+x <- arad_get(indicator_ids = "SMV5M603")
+```
+
+For a reproducible analytical window, specify dates explicitly:
+
+```r
+x <- arad_get(
+  indicator_ids = c("SMV5M601", "SMV5M603"),
+  from = "2015-01-01",
+  to = "2026-01-01"
+)
+```
+
+The returned data are long-format tibbles with `indicator_id`, `snapshot_id`, `period`, and `value`. Genuine missing source values remain `NA`.
+
+## Reshape to a wide table
+
+```r
+wide <- arad_wide(x)
+wide
+```
+
+`arad_wide()` keeps one row per period. If the same indicator is present in several snapshot contexts, snapshot IDs are added to the series names automatically so observations are not conflated.
+
+## Snapshots
+
+List available snapshots with:
+
+```r
+snaps <- arad_snapshots(lang = "en")
+```
+
+Then request a specific snapshot or ARAD's special snapshot selectors through `snapshot_ids`:
+
+```r
+snapshot_data <- arad_get(
+  indicator_ids = "MBOPCAHDPPECY",
+  snapshot_ids = "LAST"
+)
+```
+
+## Caching
+
+Caching is off by default. Enable it explicitly when repeated calls should reuse raw responses:
+
+```r
+x <- arad_get("SMV5M603", cache = "session")
+
+x <- arad_get(
+  "SMV5M603",
+  cache = "disk",
+  cache_max_age = 24 * 60 * 60
+)
+```
+
+Clear package caches with:
+
+```r
+arad_cache_clear()
+```
+
+API keys are not stored in cached response files.
+
+## Diagnostics
+
+Every `arad_get()` result carries retrieval diagnostics:
+
+```r
+attr(x, "arad_diagnostics")
+```
+
+The diagnostics report the strategy, resolved range, number of data requests and the chunk size used. `arad_wide()` preserves this attribute.
+
+## Reproducible use
+
+For analytical work, record the indicator IDs, requested date range, snapshot choice if relevant, package version, and retrieval diagnostics. When presenting ARAD data, cite the data source as Czech National Bank ARAD (for example, `Source: CNB ARAD`).
+
+If a request fails or results look surprising, see the repository's troubleshooting guide before retrying repeatedly; ARAD asks users not to overload the API with excessive request volume or frequency.

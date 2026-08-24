@@ -1,0 +1,10 @@
+citHeader("To cite aradR in publications, use:")
+
+bibentry(
+  bibtype = "Manual",
+  title = "aradR: Modern R Client and Toolkit for the Czech National Bank ARAD API",
+  author = person("Simona", "Malovana"),
+  year = "2026",
+  note = paste("R package version", meta$Version),
+  url = "https://github.com/simonamalovana/aradR"
+)

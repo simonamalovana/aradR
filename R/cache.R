@@ -95,7 +95,7 @@ arad_cache_get <- function(key, mode, max_age, cache_dir = NULL) {
   if (!file.exists(path)) {
     return(NULL)
   }
-  entry <- tryCatch(readRDS(path), error = function(e) NULL)
+  entry <- tryCatch(base::readRDS(path), error = function(e) NULL)
   if (is.null(entry) || !is.list(entry) || !is.raw(entry$raw) || is.null(entry$stored_at)) {
     unlink(path)
     return(NULL)
@@ -120,7 +120,7 @@ arad_cache_set <- function(key, raw, mode, cache_dir = NULL) {
 
   directory <- arad_cache_directory(cache_dir)
   dir.create(directory, recursive = TRUE, showWarnings = FALSE)
-  saveRDS(entry, file.path(directory, paste0(key, ".rds")))
+  base::saveRDS(entry, file.path(directory, paste0(key, ".rds")))
   invisible(raw)
 }
 

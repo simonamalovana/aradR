@@ -31,7 +31,7 @@ arad_get(
 \item{months_before}{Optional positive integer; an ARAD-native alternative to from/to.}
 \item{snapshot_ids}{Optional snapshot IDs, or ALL / LAST.}
 \item{strategy}{Retrieval strategy. auto uses bounded requests; direct makes one data request.}
-\item{chunk_days}{Maximum inclusive date span of each automatic chunk.}
+\item{chunk_days}{Maximum inclusive date span of each automatic chunk. The 3650-day default is calibrated by the package's live reliability audit.}
 \item{api_key}{ARAD API key. If NULL, ARAD_API_KEY is used.}
 \item{base_url}{ARAD API base URL. Primarily intended for testing.}
 \item{encoding}{Response encoding. Defaults to Windows-1250.}

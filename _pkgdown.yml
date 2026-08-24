@@ -1,0 +1,38 @@
+destination: site
+
+development:
+  mode: unreleased
+
+template:
+  bootstrap: 5
+
+home:
+  title: "aradR — R client for CNB ARAD"
+  description: "Reliability-first R client and toolkit for the Czech National Bank ARAD API."
+
+navbar:
+  structure:
+    left: [reference, articles, news]
+    right: [github]
+
+reference:
+  - title: "Retrieve and reshape data"
+    contents:
+      - arad_get
+      - arad_updates
+      - arad_wide
+  - title: "Discover and understand indicators"
+    contents:
+      - arad_indicators
+      - arad_search
+      - arad_dimensions
+      - arad_tree
+      - arad_snapshots
+  - title: "Caching"
+    contents:
+      - arad_cache_clear
+
+articles:
+  - title: "Getting started"
+    contents:
+      - get-started
