@@ -2,6 +2,7 @@
 ^\.Rproj\.user$
 ^\.github$
 ^NOTICE\.md$
+^LICENSE\.md$
 ^_pkgdown\.yml$
 ^docs$
 ^tools$

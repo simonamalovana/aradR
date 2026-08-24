@@ -103,7 +103,17 @@ arad_wide <- function(data,
   }
 
   periods <- sort(unique(data$period))
-  series_names <- sort(unique(series_id))
+  if (use_snapshot) {
+    keep <- !duplicated(series_id)
+    series_order <- order(
+      indicator_id[keep],
+      snapshot_id[keep] != "current",
+      snapshot_id[keep]
+    )
+    series_names <- series_id[keep][series_order]
+  } else {
+    series_names <- sort(unique(series_id))
+  }
   out <- tibble::tibble(period = periods)
 
   for (series_name in series_names) {
