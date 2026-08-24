@@ -33,6 +33,25 @@ test_that("parser accepts raw responses carrying request diagnostics", {
   expect_false(isTRUE(attr(raw, "arad_cache_hit")))
 })
 
+test_that("identical duplicate observations are collapsed", {
+  csv <- paste(
+    c(
+      "indicator_id;snapshot_id;period;value",
+      "X1;;20200101;1.5",
+      "X1;;20200101;1.5",
+      "X1;;20200102;"
+    ),
+    collapse = "\r\n"
+  )
+
+  data <- aradR:::arad_parse_data_response(charToRaw(csv), encoding = "UTF-8")
+
+  expect_equal(nrow(data), 2L)
+  expect_equal(data$period, as.Date(c("2020-01-01", "2020-01-02")))
+  expect_equal(data$value[[1]], 1.5)
+  expect_true(is.na(data$value[[2]]))
+})
+
 test_that("non-missing invalid numeric values fail loudly", {
   csv <- paste(
     c(
@@ -48,7 +67,7 @@ test_that("non-missing invalid numeric values fail loudly", {
   )
 })
 
-test_that("invalid periods and duplicate observation keys fail loudly", {
+test_that("invalid periods and conflicting duplicate observation keys fail loudly", {
   bad_date <- paste(
     c(
       "indicator_id;snapshot_id;period;value",
