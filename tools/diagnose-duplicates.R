@@ -44,7 +44,7 @@ read_raw_table <- function(raw) {
   )
 }
 
-rows <- list()
+all_rows <- list()
 request_errors <- list()
 
 for (id in ids) {
@@ -98,44 +98,64 @@ for (id in ids) {
     required <- c("indicator_id", "snapshot_id", "period", "value")
     if (!all(required %in% names(tab))) next
 
-    snapshot_key <- ifelse(is.na(tab$snapshot_id), "<NA>", tab$snapshot_id)
-    key <- paste(tab$indicator_id, snapshot_key, tab$period, sep = "\r")
-    dup <- duplicated(key) | duplicated(key, fromLast = TRUE)
-    if (!any(dup)) next
+    tab <- as.data.frame(tab[, required, drop = FALSE], stringsAsFactors = FALSE)
+    tab$requested_id <- id
+    tab$chunk_from <- format(chunk$from)
+    tab$chunk_to <- format(chunk$to)
+    all_rows[[length(all_rows) + 1L]] <- tab
+  }
+}
 
-    dup_tab <- tab[dup, required, drop = FALSE]
-    dup_snapshot <- ifelse(is.na(dup_tab$snapshot_id), "<NA>", dup_tab$snapshot_id)
-    dup_key <- paste(dup_tab$indicator_id, dup_snapshot, dup_tab$period, sep = "\r")
+if (length(all_rows)) {
+  raw_rows <- do.call(rbind, all_rows)
+  snapshot_key <- ifelse(is.na(raw_rows$snapshot_id), "<NA>", raw_rows$snapshot_id)
+  key <- paste(raw_rows$requested_id, raw_rows$indicator_id, snapshot_key, raw_rows$period, sep = "\r")
+  dup <- duplicated(key) | duplicated(key, fromLast = TRUE)
+
+  diagnostics <- list()
+  if (any(dup)) {
+    dup_rows <- raw_rows[dup, , drop = FALSE]
+    dup_snapshot <- ifelse(is.na(dup_rows$snapshot_id), "<NA>", dup_rows$snapshot_id)
+    dup_key <- paste(dup_rows$requested_id, dup_rows$indicator_id, dup_snapshot, dup_rows$period, sep = "\r")
 
     for (k in unique(dup_key)) {
-      group <- dup_tab[dup_key == k, , drop = FALSE]
+      group <- dup_rows[dup_key == k, , drop = FALSE]
       values <- ifelse(is.na(group$value), "<NA>", group$value)
-      rows[[length(rows) + 1L]] <- data.frame(
-        requested_id = id,
-        chunk_from = format(chunk$from),
-        chunk_to = format(chunk$to),
+      chunk_labels <- paste(group$chunk_from, group$chunk_to, sep = "..")
+      diagnostics[[length(diagnostics) + 1L]] <- data.frame(
+        requested_id = group$requested_id[[1L]],
         indicator_id = group$indicator_id[[1L]],
         snapshot_id = ifelse(is.na(group$snapshot_id[[1L]]), "<NA>", group$snapshot_id[[1L]]),
         period = group$period[[1L]],
         n_rows = nrow(group),
+        n_chunks = length(unique(chunk_labels)),
         n_distinct_values = length(unique(values)),
         values = paste(unique(values), collapse = " | "),
+        chunks = paste(unique(chunk_labels), collapse = " | "),
         stringsAsFactors = FALSE
       )
     }
   }
-}
 
-if (length(rows)) {
-  duplicates <- do.call(rbind, rows)
+  if (length(diagnostics)) {
+    duplicates <- do.call(rbind, diagnostics)
+  } else {
+    duplicates <- data.frame(
+      requested_id = character(), indicator_id = character(), snapshot_id = character(),
+      period = character(), n_rows = integer(), n_chunks = integer(),
+      n_distinct_values = integer(), values = character(), chunks = character(),
+      stringsAsFactors = FALSE
+    )
+  }
 } else {
   duplicates <- data.frame(
-    requested_id = character(), chunk_from = character(), chunk_to = character(),
-    indicator_id = character(), snapshot_id = character(), period = character(),
-    n_rows = integer(), n_distinct_values = integer(), values = character(),
+    requested_id = character(), indicator_id = character(), snapshot_id = character(),
+    period = character(), n_rows = integer(), n_chunks = integer(),
+    n_distinct_values = integer(), values = character(), chunks = character(),
     stringsAsFactors = FALSE
   )
 }
+
 write.csv(duplicates, file.path(output_dir, "duplicate-diagnostics.csv"), row.names = FALSE, na = "")
 
 if (length(request_errors)) {
@@ -145,8 +165,9 @@ if (length(request_errors)) {
 }
 write.csv(errors, file.path(output_dir, "duplicate-diagnostic-errors.csv"), row.names = FALSE, na = "")
 
-cat("Duplicate diagnostic groups:", nrow(duplicates), "\n")
+cat("Cross-chunk duplicate diagnostic groups:", nrow(duplicates), "\n")
 if (nrow(duplicates)) {
+  cat("Groups spanning multiple chunks:", sum(duplicates$n_chunks > 1L), "\n")
   cat("Groups with differing values:", sum(duplicates$n_distinct_values > 1L), "\n")
 }
 cat("Diagnostic request errors:", nrow(errors), "\n")
