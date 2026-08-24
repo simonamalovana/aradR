@@ -6,9 +6,15 @@ arad_read_character_table <- function(raw,
     arad_abort("Internal ARAD response must be raw bytes.", "arad_parse_error")
   }
 
+  # `arad_request()` attaches cache diagnostics to the raw response. Base
+  # `writeBin()` rejects atomic vectors carrying arbitrary attributes, so strip
+  # those attributes from the local byte copy before materialising the CSV.
+  raw_bytes <- raw
+  attributes(raw_bytes) <- NULL
+
   file <- tempfile(fileext = ".csv")
   on.exit(unlink(file), add = TRUE)
-  writeBin(raw, file)
+  writeBin(raw_bytes, file)
 
   table <- tryCatch(
     suppressWarnings(
