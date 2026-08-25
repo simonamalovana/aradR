@@ -42,7 +42,7 @@ arad_request_raw <- function(endpoint,
                              max_tries = 3L) {
   base_url <- arad_base_url(base_url)
   api_key <- arad_api_key(api_key)
-  mode <- arad_endpoint_mode()
+  mode <- arad_request_mode(base_url)
 
   request <- httr2::request(base_url) |>
     httr2::req_url_path_append(endpoint) |>
