@@ -4,6 +4,8 @@ Modern R client and toolkit for the Czech National Bank ARAD API.
 
 `aradR` is an independent, reliability-first R package for discovering, retrieving, validating, reshaping, and working reproducibly with data from the Czech National Bank's ARAD database.
 
+**Author and maintainer:** Simona Malovana
+
 ## Project status
 
 **Release candidate (`0.2.0`).** The core retrieval API is reliability-calibrated, the human-readable discovery workflow has been validated against the live ARAD API, and the public API is frozen for the 0.2.0 release candidate. The repository is currently private.
@@ -166,11 +168,16 @@ The audit remains deliberately bounded and rate-limited because ARAD asks client
 - `vignette("get-started", package = "aradR")` — end-to-end onboarding;
 - [`docs/troubleshooting.md`](docs/troubleshooting.md) — common failures and diagnostics;
 - [`docs/architecture.md`](docs/architecture.md) — public API and reliability design;
+- [`AUTHORS.md`](AUTHORS.md) — authorship and upstream provenance;
 - `_pkgdown.yml` — website structure ready for publication when the repository is made public.
 
 ## Data citation
 
 When presenting data obtained from ARAD, identify the source as the Czech National Bank ARAD database (for example, `Source: CNB ARAD`).
+
+## Author
+
+`aradR` is authored and maintained by **Simona Malovana**. The package metadata and citation information identify Simona Malovana as the package author and maintainer.
 
 ## Provenance
 
