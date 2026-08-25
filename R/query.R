@@ -1,11 +1,19 @@
-arad_base_url <- function(base_url = NULL) {
-  if (is.null(base_url)) {
-    base_url <- getOption("aradR.base_url", "https://www.cnb.cz/aradb/api/v1")
-  }
-  if (length(base_url) != 1L || is.na(base_url) || !nzchar(base_url)) {
+arad_external_base_url <- function() {
+  "https://www.cnb.cz/aradb/api/v1"
+}
+
+arad_validate_base_url <- function(base_url) {
+  if (length(base_url) != 1L || is.na(base_url) || !nzchar(trimws(base_url))) {
     arad_abort("`base_url` must be a non-empty scalar string.", "arad_input_error")
   }
-  sub("/+$", "", base_url)
+  sub("/+$", "", trimws(base_url))
+}
+
+arad_base_url <- function(base_url = NULL) {
+  if (is.null(base_url)) {
+    base_url <- getOption("aradR.base_url", arad_external_base_url())
+  }
+  arad_validate_base_url(base_url)
 }
 
 arad_api_key <- function(api_key = NULL) {

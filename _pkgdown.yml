@@ -31,6 +31,10 @@ reference:
       - arad_get
       - arad_updates
       - arad_wide
+  - title: "Endpoint configuration"
+    contents:
+      - arad_use_internal
+      - arad_use_external
   - title: "Caching"
     contents:
       - arad_cache_clear

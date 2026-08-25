@@ -26,6 +26,26 @@ Check that:
 
 Server messages are surfaced where possible, but credentials are redacted.
 
+## Internal endpoint: proxy 303 or HTTP 401
+
+The public ARAD endpoint is the package default. If your organization provides an internal ARAD endpoint that uses integrated Negotiate authentication, enable it with `arad_use_internal()` rather than changing only `options(aradR.base_url = ...)`.
+
+```r
+arad_use_internal("https://internal.example/api/v1")
+```
+
+Internal mode bypasses configured proxies for ARAD requests and asks libcurl to authenticate with the current integrated login. It has been validated with Windows integrated authentication.
+
+A low-level error such as `Received HTTP code 303 from proxy after CONNECT` means a network proxy intercepted the connection before ARAD was reached. In internal mode, aradR bypasses that proxy for the ARAD request.
+
+An HTTP 401 response in internal mode means the endpoint was reached but integrated authentication was not accepted. Confirm that the R session is running under an authorized login and that Negotiate authentication is available. Do not put a Windows password into R code.
+
+Restore normal public-endpoint behaviour with:
+
+```r
+arad_use_external()
+```
+
 ## No rows returned
 
 An empty result is not automatically an error. First inspect availability:
