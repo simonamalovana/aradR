@@ -25,7 +25,7 @@ arad_catalog(
 \item{selection_id}{ARAD user selection ID.}
 \item{lang}{Metadata language, \code{"cs"} or \code{"en"}.}
 \item{include_path}{Include the ARAD hierarchy path for each indicator.}
-\item{include_availability}{Include available data boundaries, latest update timestamp and snapshot-context count.}
+\item{include_availability}{Include earliest/latest availability boundaries, latest update timestamp and snapshot-context count. \code{data_to} is reported by ARAD and can extend into a forecast or reporting horizon; it is not necessarily the latest observed historical date.}
 \item{api_key}{ARAD API key. If \code{NULL}, \code{ARAD_API_KEY} is used.}
 \item{base_url}{ARAD API base URL. Primarily intended for testing.}
 \item{encoding}{Response encoding.}
