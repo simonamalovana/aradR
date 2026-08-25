@@ -1,5 +1,7 @@
 # aradR 0.2.0 (release candidate)
 
+**Author and maintainer:** Simona Malovana
+
 ## Discovery UX
 
 - Added `arad_catalog()` for one-row-per-indicator browsing within an ARAD set, base, selection or explicit indicator list.
@@ -18,6 +20,8 @@
 - Release-candidate CI validates package checks across Ubuntu, macOS and Windows and builds the pkgdown documentation site before release.
 
 # aradR 0.1.0 (pre-release)
+
+**Author and maintainer:** Simona Malovana
 
 ## Reliability core
 
