@@ -1,4 +1,4 @@
-citHeader("To cite aradR in publications, use:")
+citHeader("To cite aradR by Simona Malovana in publications, use:")
 
 bibentry(
   bibtype = "Manual",
