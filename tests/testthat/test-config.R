@@ -28,6 +28,14 @@ test_that("internal mode configures endpoint, proxy bypass and Negotiate", {
   expect_identical(getOption("aradR.base_url"), "https://internal.example/api/v1")
   expect_identical(getOption("aradR.endpoint_mode"), "internal")
   expect_identical(Sys.getenv("ARAD_API_KEY"), "test-user")
+  expect_identical(
+    aradR:::arad_request_mode("https://internal.example/api/v1"),
+    "internal"
+  )
+  expect_identical(
+    aradR:::arad_request_mode("https://www.cnb.cz/aradb/api/v1"),
+    "external"
+  )
 
   req <- httr2::request("https://internal.example")
   req <- aradR:::arad_apply_transport(req)
@@ -71,7 +79,7 @@ test_that("pre-response HTTP errors retain useful redacted diagnostics", {
   )
 
   expect_match(msg, "303")
-  expect_match(msg, "proxy", ignore.case = TRUE)
-  expect_match(msg, "arad_use_internal", fixed = TRUE)
+  expect_true(grepl("proxy", msg, ignore.case = TRUE))
+  expect_true(grepl("arad_use_internal", msg, fixed = TRUE))
   expect_false(grepl("secret-123", msg, fixed = TRUE))
 })
