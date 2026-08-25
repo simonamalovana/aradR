@@ -1,0 +1,93 @@
+name: Windows R 4.1 binary
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/windows-r41-binary.yaml'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to build and attach'
+        required: true
+        default: 'v0.2.0-rc1'
+
+permissions:
+  contents: write
+
+env:
+  TARGET_TAG: ${{ github.event.inputs.tag || 'v0.2.0-rc1' }}
+  CRAN_MIRROR: https://cran.nic.cz
+
+jobs:
+  build-windows-r41:
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out exact release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_TAG }}
+
+      - name: Set up R 4.1.0
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.1.0'
+          use-public-rspm: false
+
+      - name: Install workplace-compatible binary dependencies
+        shell: Rscript {0}
+        run: |
+          options(repos = c(CRAN = Sys.getenv('CRAN_MIRROR')))
+          install.packages(c('httr2', 'readr', 'tibble'), type = 'binary')
+          stopifnot(
+            as.character(packageVersion('httr2')) == '0.2.2',
+            as.character(packageVersion('readr')) == '2.1.4',
+            as.character(packageVersion('tibble')) == '3.2.1'
+          )
+          message('Verified binaries: httr2 0.2.2; readr 2.1.4; tibble 3.2.1')
+
+      - name: Build Windows binary package
+        shell: pwsh
+        run: |
+          R CMD INSTALL --build .
+          $zip = Get-ChildItem -Path . -Filter 'aradR_*.zip' | Select-Object -First 1
+          if (-not $zip) { throw 'Windows binary package was not created.' }
+          Write-Host "Built $($zip.Name)"
+
+      - name: Verify binary installs and loads
+        shell: pwsh
+        run: |
+          $zip = (Get-ChildItem -Path . -Filter 'aradR_*.zip' | Select-Object -First 1).FullName
+          $testLib = Join-Path $env:RUNNER_TEMP 'aradR-test-lib'
+          New-Item -ItemType Directory -Force -Path $testLib | Out-Null
+          $env:ARADR_BINARY_ZIP = $zip
+          $env:ARADR_TEST_LIB = $testLib
+          Rscript -e ".libPaths(c(Sys.getenv('ARADR_TEST_LIB'), .libPaths())); install.packages(Sys.getenv('ARADR_BINARY_ZIP'), repos = NULL, type = 'win.binary', lib = Sys.getenv('ARADR_TEST_LIB')); library(aradR, lib.loc = Sys.getenv('ARADR_TEST_LIB')); stopifnot(as.character(packageVersion('aradR')) == '0.2.0'); message('Windows binary install/load OK')"
+
+      - name: Live smoke test on old dependency stack
+        shell: Rscript {0}
+        env:
+          ARAD_API_KEY: ${{ secrets.ARAD_API_KEY }}
+        run: |
+          library(aradR)
+          stopifnot(nzchar(Sys.getenv('ARAD_API_KEY')))
+          x <- arad_updates(indicator_ids = 'SFTP01D15')
+          stopifnot(nrow(x) >= 1L)
+          message('Live ARAD request OK on R 4.1.0 + httr2 0.2.2')
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aradR-windows-r41
+          path: aradR_*.zip
+          if-no-files-found: error
+
+      - name: Attach binary to GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $zip = Get-ChildItem -Path . -Filter 'aradR_*.zip' | Select-Object -First 1
+          gh release upload $env:TARGET_TAG $zip.FullName --clobber --repo $env:GITHUB_REPOSITORY
