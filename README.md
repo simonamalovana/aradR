@@ -8,7 +8,7 @@ Modern R client and toolkit for the Czech National Bank ARAD API.
 
 ## Project status
 
-**Release candidate (`0.2.0`).** The core retrieval API is reliability-calibrated, the human-readable discovery workflow has been validated against the live ARAD API, and the public API is frozen for the 0.2.0 release candidate. The repository is currently private.
+**Release candidate (`0.2.0`).** The core retrieval API is reliability-calibrated, the human-readable discovery workflow has been validated against the live ARAD API, and the public API is frozen for the 0.2.0 release candidate.
 
 ## Install
 
@@ -20,7 +20,7 @@ pak::pak("simonamalovana/aradR")
 remotes::install_github("simonamalovana/aradR")
 ```
 
-While the repository is private, GitHub access is required for installation.
+The repository is public, so no GitHub account is required to view the source or release assets.
 
 ## Quick start
 
@@ -58,6 +58,26 @@ wide <- arad_wide(x)
 For a full available history, omit `from` and `to`.
 
 Exactly one ARAD selector is accepted where a scoped endpoint requires one: `indicator_ids`, `set_id`, `base_id`, or `selection_id`.
+
+## Internal/custom ARAD endpoints
+
+The public ARAD API is always the default. Users who have access to an organization-provided ARAD endpoint protected by integrated Negotiate authentication can opt in explicitly:
+
+```r
+arad_use_internal("https://internal.example/api/v1")
+
+catalog <- arad_catalog(set_id = 1058)
+```
+
+`arad_use_internal()` bypasses configured proxies for those ARAD requests and asks libcurl to use the current integrated login. This behaviour has been validated with Windows integrated authentication. The internal base URL can alternatively be stored in `ARAD_INTERNAL_BASE_URL` and then enabled with `arad_use_internal()`.
+
+Return to the public endpoint with:
+
+```r
+arad_use_external()
+```
+
+Internal endpoint addresses and credentials are deliberately not built into the public package.
 
 ## Discovery workflow
 
@@ -169,7 +189,7 @@ The audit remains deliberately bounded and rate-limited because ARAD asks client
 - [`docs/troubleshooting.md`](docs/troubleshooting.md) — common failures and diagnostics;
 - [`docs/architecture.md`](docs/architecture.md) — public API and reliability design;
 - [`AUTHORS.md`](AUTHORS.md) — authorship and upstream provenance;
-- `_pkgdown.yml` — website structure ready for publication when the repository is made public.
+- `_pkgdown.yml` — website structure ready for publication.
 
 ## Data citation
 
