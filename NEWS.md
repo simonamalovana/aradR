@@ -1,13 +1,21 @@
-# aradR 0.2.0 (pre-release)
+# aradR 0.2.0 (release candidate)
 
 ## Discovery UX
 
 - Added `arad_catalog()` for one-row-per-indicator browsing within an ARAD set, base, selection or explicit indicator list.
 - Added `arad_find()` as a higher-level human-readable search across indicator names/IDs, ARAD hierarchy paths and, by default, base/dimension labels and values.
+- `arad_find()` now returns deterministic, explainable relevance ordering through `relevance_score` and `matched_in`; exact ID/name matches rank ahead of partial name/ID, path and dimension matches, with stable tie-breaking.
 - `arad_find(details = TRUE)` enriches only matched indicators with available data boundaries, latest update timestamp and snapshot-context count.
 - Added `arad_info()` for inspecting selected candidate series through a compact summary plus detailed dimensions and raw update rows.
 - Kept `arad_search()` unchanged as the fast, lightweight name/ID search for backwards compatibility.
+- Clarified that ARAD-reported `data_to` can extend into forecast/report horizons and is not necessarily the latest observed historical date.
 - Updated onboarding and reference documentation around a browse → find → inspect → retrieve workflow.
+
+## Live validation and compatibility
+
+- Live 0.2.0 UX acceptance covers catalogue browsing and end-to-end find → info → get → wide workflows in balance-of-payments, financial-accounts and state-budget scopes.
+- Added compatibility with the current `/indicators-dims` `base_code` response while preserving the stable public `base_id` column; legacy `base_id` responses remain supported.
+- Release-candidate CI validates package checks across Ubuntu, macOS and Windows and builds the pkgdown documentation site before release.
 
 # aradR 0.1.0 (pre-release)
 

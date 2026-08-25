@@ -23,5 +23,5 @@ arad_info(
 \item{cache_dir}{Optional disk cache directory.}
 \item{cache_max_age}{Maximum cache age in seconds.}
 }
-\value{A named list with \code{summary}, \code{dimensions}, and \code{updates} tibbles.}
+\value{A named list with \code{summary}, \code{dimensions}, and \code{updates} tibbles. Availability dates in \code{summary} are boundaries reported by ARAD; \code{data_to} can include future forecast or reporting horizons.}
 \description{Retrieves a compact path/availability summary plus detailed dimension metadata and raw update rows for candidate indicators selected through discovery.}

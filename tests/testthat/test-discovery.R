@@ -69,12 +69,14 @@ test_that("arad_find searches hierarchy and dimensions without indicator IDs", {
   expect_equal(path_hit$indicator_id, "A2")
   expect_equal(path_hit$frequency_code, "D")
   expect_equal(path_hit$data_from, as.Date("1995-01-01"))
+  expect_equal(path_hit$matched_in, "path")
   expect_equal(calls$updates_query$indicator_id_list, "A2")
 
   dimension_hit <- arad_find(
     "households", set_id = 1, details = FALSE, api_key = "key"
   )
   expect_equal(dimension_hit$indicator_id, "A1")
+  expect_equal(dimension_hit$matched_in, "dimensions")
   expect_true("path" %in% names(dimension_hit))
   expect_false("data_from" %in% names(dimension_hit))
 })
@@ -89,7 +91,72 @@ test_that("arad_find supports frequency filtering and empty detailed results", {
 
   none <- arad_find("does-not-exist", set_id = 1, api_key = "key")
   expect_equal(nrow(none), 0L)
-  expect_true(all(c("path", "data_from", "data_to", "last_update", "snapshot_contexts") %in% names(none)))
+  expect_true(all(c(
+    "path", "relevance_score", "matched_in", "data_from", "data_to",
+    "last_update", "snapshot_contexts"
+  ) %in% names(none)))
+})
+
+test_that("arad_find ranks exact, name, path and dimension matches deterministically", {
+  ranking_stub <- function(endpoint, query, api_key, base_url) {
+    rows <- switch(
+      endpoint,
+      indicators = c(
+        "indicator_id;indicator_name;frequency_code;frequency_name;unit_mult_code;unit_mult_name;unit",
+        "A1;Other series;M;Monthly;0;units;index",
+        "A2;Households deposits;M;Monthly;0;units;CZK",
+        "A3;Households assets;M;Monthly;0;units;CZK",
+        "A4;Unrelated series;M;Monthly;0;units;CZK",
+        "HOUSEHOLDS;Technical identifier;M;Monthly;0;units;CZK"
+      ),
+      `indicators-tree` = c(
+        "indicator_id;path",
+        "A1;ARAD/Households/Overview",
+        "A2;ARAD/Financial accounts/Deposits",
+        "A3;ARAD/Financial accounts/Assets",
+        "A4;ARAD/Financial accounts/Other",
+        "HOUSEHOLDS;ARAD/Technical"
+      ),
+      `indicators-dims` = c(
+        "indicator_id;base_id;base_name;dim_code;dim_name;dim_value_code;dim_value_name;dim_rank",
+        "A1;B1;General;SEC;Sector;OTH;Other;1",
+        "A2;B1;General;SEC;Sector;HH;Households;1",
+        "A3;B1;General;SEC;Sector;HH;Households;1",
+        "A4;B1;General;SEC;Sector;HH;Households;1",
+        "HOUSEHOLDS;B1;General;SEC;Sector;OTH;Other;1"
+      ),
+      updates = c(
+        "indicator_id;snapshot_id;update_date;data_from;data_to",
+        "A1;;20260824120000;20000101;20260701",
+        "A2;;20260824120000;20000101;20260701",
+        "A3;;20260824120000;20000101;20260701",
+        "A4;;20260824120000;20000101;20260701",
+        "HOUSEHOLDS;;20260824120000;20000101;20260701"
+      ),
+      stop("unexpected endpoint")
+    )
+    if (!is.null(query$indicator_id_list)) {
+      ids <- strsplit(query$indicator_id_list, ",", fixed = TRUE)[[1L]]
+      row_ids <- sub(";.*$", "", rows[-1L])
+      rows <- c(rows[[1L]], rows[-1L][row_ids %in% ids])
+    }
+    make_arad_raw(rows)
+  }
+
+  old <- getOption("aradR.request_fn")
+  on.exit(options(aradR.request_fn = old), add = TRUE)
+  options(aradR.request_fn = ranking_stub)
+
+  out <- arad_find("households", set_id = 1, details = FALSE, api_key = "key")
+
+  expect_equal(
+    out$indicator_id,
+    c("HOUSEHOLDS", "A3", "A2", "A1", "A4")
+  )
+  expect_equal(out$relevance_score, c(120L, 90L, 90L, 60L, 55L))
+  expect_equal(out$matched_in[[1L]], "indicator_id")
+  expect_equal(out$matched_in[[4L]], "path")
+  expect_equal(out$matched_in[[5L]], "dimensions")
 })
 
 test_that("arad_info returns summary dimensions and raw update rows", {

@@ -6,11 +6,11 @@ Modern R client and toolkit for the Czech National Bank ARAD API.
 
 ## Project status
 
-**Pre-release (`0.2.0`).** The core retrieval API is reliability-calibrated and the package now includes a higher-level discovery workflow. The public API may still change before a first stable release. The repository is currently private.
+**Release candidate (`0.2.0`).** The core retrieval API is reliability-calibrated, the human-readable discovery workflow has been validated against the live ARAD API, and the public API is frozen for the 0.2.0 release candidate. The repository is currently private.
 
 ## Install
 
-For the current development/pre-release build:
+For the current release-candidate build:
 
 ```r
 pak::pak("simonamalovana/aradR")
@@ -73,6 +73,9 @@ hits <- arad_find(
   frequency = "M"
 )
 
+# See why the leading results matched
+hits[, c("indicator_id", "indicator_name", "relevance_score", "matched_in")]
+
 # Detailed metadata for selected candidates
 info <- arad_info(hits$indicator_id[1], lang = "en")
 info$summary
@@ -80,7 +83,9 @@ info$dimensions
 info$updates
 ```
 
-`arad_find()` searches indicator names/IDs and ARAD hierarchy paths and, by default, base/dimension labels and values. With `details = TRUE` it adds available data boundaries, latest update timestamp and snapshot-context count only for the matched indicators.
+`arad_find()` searches indicator names/IDs and ARAD hierarchy paths and, by default, base/dimension labels and values. Results are ordered deterministically by explainable relevance: exact ID/name matches first, then partial ID/name matches, hierarchy-path matches and dimension matches. `relevance_score` is an ordinal score for ordering the current result set; `matched_in` shows which metadata sources matched. With `details = TRUE`, availability and update metadata are added only for the matched indicators.
+
+`data_from` and `data_to` are availability boundaries reported by ARAD through `/updates`. In particular, `data_to` can extend into a forecast or reporting horizon and should not automatically be interpreted as the latest observed historical date.
 
 `arad_search()` remains available as a faster, lightweight search over indicator names and IDs when hierarchy/dimension discovery is not needed.
 
@@ -91,11 +96,11 @@ info$updates
 - genuine missing values preserved rather than silently dropped;
 - safe handling of identical cross-chunk boundary overlaps;
 - explicit errors for conflicting duplicate observations;
-- human-readable scoped discovery and metadata inspection;
+- ranked, explainable human-readable scoped discovery and metadata inspection;
 - snapshot support;
 - opt-in session or disk caching;
 - retrieval diagnostics for reproducibility;
-- automated tests plus bounded live ARAD audits.
+- automated tests plus bounded live ARAD audits and live UX acceptance checks.
 
 ## Retrieval model
 
