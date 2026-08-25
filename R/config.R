@@ -9,6 +9,25 @@ arad_endpoint_mode <- function() {
   mode
 }
 
+arad_request_mode <- function(base_url) {
+  mode <- arad_endpoint_mode()
+  if (!identical(mode, "internal")) {
+    return(mode)
+  }
+
+  configured <- getOption("aradR.base_url", NULL)
+  if (is.null(configured)) {
+    return("external")
+  }
+
+  configured <- arad_validate_base_url(configured)
+  if (!identical(base_url, configured)) {
+    return("external")
+  }
+
+  "internal"
+}
+
 arad_apply_transport <- function(request, mode = arad_endpoint_mode()) {
   if (identical(mode, "internal")) {
     request <- httr2::req_options(
@@ -22,16 +41,19 @@ arad_apply_transport <- function(request, mode = arad_endpoint_mode()) {
   request
 }
 
-#' Use an internal ARAD endpoint
+#' Configure ARAD endpoint mode
 #'
-#' Opt in to an organization-provided ARAD endpoint that is protected by
-#' integrated Negotiate authentication. The public ARAD endpoint remains the
-#' package default unless this function is called.
+#' `arad_use_internal()` opts in to an organization-provided ARAD endpoint that
+#' is protected by integrated Negotiate authentication. The public ARAD endpoint
+#' remains the package default unless this function is called.
 #'
-#' Internal mode bypasses configured proxies for ARAD requests and asks libcurl
-#' to use Negotiate authentication with the current login. This is validated on
-#' Windows integrated authentication; other platforms depend on local
-#' libcurl/Kerberos configuration.
+#' Internal mode bypasses configured proxies for requests to the configured
+#' internal base URL and asks libcurl to use Negotiate authentication with the
+#' current login. This is validated on Windows integrated authentication; other
+#' platforms depend on local libcurl/Kerberos configuration.
+#'
+#' `arad_use_external()` restores the public ARAD endpoint and normal network
+#' handling.
 #'
 #' @param base_url Internal ARAD REST API base URL. If omitted, the value of
 #'   `ARAD_INTERNAL_BASE_URL` is used.
@@ -43,6 +65,8 @@ arad_apply_transport <- function(request, mode = arad_endpoint_mode()) {
 #' \dontrun{
 #' arad_use_internal("https://internal.example/api/v1")
 #' arad_catalog(set_id = 1058)
+#'
+#' arad_use_external()
 #' }
 arad_use_internal <- function(base_url = Sys.getenv("ARAD_INTERNAL_BASE_URL", unset = ""),
                               api_key = NULL) {
@@ -67,19 +91,8 @@ arad_use_internal <- function(base_url = Sys.getenv("ARAD_INTERNAL_BASE_URL", un
   invisible(base_url)
 }
 
-#' Use the public ARAD endpoint
-#'
-#' Restore the package defaults after an internal/custom endpoint was enabled.
-#'
-#' @param api_key Optional public ARAD API key. When supplied, it is stored only
-#'   in the current R process as `ARAD_API_KEY`.
-#' @return The public ARAD base URL, invisibly.
+#' @rdname arad_use_internal
 #' @export
-#' @examples
-#' \dontrun{
-#' arad_use_external()
-#' arad_catalog(set_id = 1058)
-#' }
 arad_use_external <- function(api_key = NULL) {
   if (!is.null(api_key)) {
     Sys.setenv(ARAD_API_KEY = arad_api_key(api_key))
