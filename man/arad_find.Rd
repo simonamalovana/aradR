@@ -30,7 +30,7 @@ arad_find(
 \item{selection_id}{ARAD user selection ID.}
 \item{frequency}{Optional frequency code(s) to retain.}
 \item{search_dimensions}{Search base and dimension labels/codes as well as names, IDs and hierarchy paths.}
-\item{details}{Add availability/update columns for matched indicators.}
+\item{details}{Add availability/update columns for matched indicators. \code{data_to} is the ARAD-reported availability boundary and can extend into a forecast or reporting horizon; it is not necessarily the latest observed historical date.}
 \item{regex}{Interpret \code{term} as a regular expression.}
 \item{ignore_case}{Ignore case while matching.}
 \item{lang}{Metadata language, \code{"cs"} or \code{"en"}.}
@@ -41,5 +41,5 @@ arad_find(
 \item{cache_dir}{Optional disk cache directory.}
 \item{cache_max_age}{Maximum cache age in seconds.}
 }
-\value{A filtered, path-aware indicator catalogue. With \code{details = TRUE}, availability columns are included.}
-\description{Searches names, IDs and ARAD hierarchy paths and, by default, base/dimension metadata so a user does not need to know an indicator ID in advance. ARAD metadata endpoints remain scoped, so exactly one selector is required.}
+\value{A filtered, path-aware indicator catalogue ordered by relevance. \code{relevance_score} is an ordinal score intended only to order results for the current query, and \code{matched_in} records which metadata sources matched. With \code{details = TRUE}, availability columns are included.}
+\description{Searches names, IDs and ARAD hierarchy paths and, by default, base/dimension metadata so a user does not need to know an indicator ID in advance. ARAD metadata endpoints remain scoped, so exactly one selector is required. Results are ordered deterministically: exact ID/name matches first, then partial ID/name matches, hierarchy-path matches and dimension matches, with stable name/ID tie-breaking.}
