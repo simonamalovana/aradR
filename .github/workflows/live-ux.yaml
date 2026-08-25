@@ -4,6 +4,7 @@ on:
   pull_request:
     branches: [main]
     paths:
+      - '.github/live-ux-trigger'
       - 'tools/live-ux.R'
       - '.github/workflows/live-ux.yaml'
   workflow_dispatch:
