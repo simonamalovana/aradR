@@ -49,17 +49,16 @@ jobs:
           message('Verified binaries: httr2 0.2.2; readr 2.1.4; tibble 3.2.1')
 
       - name: Build Windows binary package
-        shell: pwsh
+        shell: cmd
         run: |
           R CMD INSTALL --build .
-          $zip = Get-ChildItem -Path . -Filter 'aradR_*.zip' | Select-Object -First 1
-          if (-not $zip) { throw 'Windows binary package was not created.' }
-          Write-Host "Built $($zip.Name)"
+          dir aradR_*.zip
 
       - name: Verify binary installs and loads
         shell: pwsh
         run: |
           $zip = (Get-ChildItem -Path . -Filter 'aradR_*.zip' | Select-Object -First 1).FullName
+          if (-not $zip) { throw 'Windows binary package was not created.' }
           $testLib = Join-Path $env:RUNNER_TEMP 'aradR-test-lib'
           New-Item -ItemType Directory -Force -Path $testLib | Out-Null
           $env:ARADR_BINARY_ZIP = $zip
