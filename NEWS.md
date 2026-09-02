@@ -19,6 +19,7 @@
 - Internal mode bypasses configured proxies for ARAD requests and uses the current integrated login rather than storing a Windows password in R.
 - Added `arad_use_external()` to restore the public endpoint and normal network handling.
 - Improved pre-response HTTP diagnostics so proxy/connection failures retain the underlying redacted error instead of collapsing to a generic message; HTTP 401 responses are now classified as authentication errors.
+- Added an early compatibility check for the HTTP stack: legacy `httr2 0.2.2` remains supported, while `httr2 >= 1.2.0` is paired with its required `curl >= 6.4.0`; incompatible installations now fail with an actionable update-and-restart message.
 - Internal endpoint addresses and credentials are not embedded in the public package.
 
 ## Live validation and compatibility

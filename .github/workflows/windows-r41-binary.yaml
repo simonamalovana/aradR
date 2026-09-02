@@ -10,13 +10,13 @@ on:
       tag:
         description: 'Release tag to build and attach'
         required: true
-        default: 'v0.2.0-rc1'
+        default: 'v0.2.0-rc3'
 
 permissions:
   contents: write
 
 env:
-  TARGET_TAG: ${{ github.event.inputs.tag || 'v0.2.0-rc1' }}
+  TARGET_TAG: ${{ github.event.inputs.tag || 'v0.2.0-rc3' }}
   CRAN_MIRROR: https://cran.nic.cz
 
 jobs:
@@ -46,7 +46,11 @@ jobs:
             as.character(packageVersion('readr')) == '2.1.4',
             as.character(packageVersion('tibble')) == '3.2.1'
           )
-          message('Verified binaries: httr2 0.2.2; readr 2.1.4; tibble 3.2.1')
+          message(
+            'Verified binaries: httr2 0.2.2; curl ',
+            packageVersion('curl'),
+            '; readr 2.1.4; tibble 3.2.1'
+          )
 
       - name: Build Windows binary package
         shell: cmd

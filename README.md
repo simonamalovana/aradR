@@ -22,6 +22,18 @@ remotes::install_github("simonamalovana/aradR")
 
 The repository is public, so no GitHub account is required to view the source or release assets.
 
+If an HTTP dependency error occurs, check the two relevant package versions:
+
+```r
+packageVersion("httr2")
+packageVersion("curl")
+```
+
+The workplace-compatible legacy stack with `httr2 0.2.2` remains supported.
+`httr2 >= 1.2.0` requires `curl >= 6.4.0`; `aradR` checks this combination
+before making a request and gives an explicit update-and-restart instruction
+instead of exposing an internal `curl_modify_url` error.
+
 ## Quick start
 
 Store your ARAD API key outside source code, preferably in `~/.Renviron`:
