@@ -40,6 +40,8 @@ arad_request_raw <- function(endpoint,
                              base_url = NULL,
                              timeout = 30,
                              max_tries = 3L) {
+  arad_check_http_dependencies()
+
   base_url <- arad_base_url(base_url)
   api_key <- arad_api_key(api_key)
   mode <- arad_request_mode(base_url)
