@@ -204,48 +204,104 @@ alone is misleading; PR records and current-tree content were compared.
 - Release/audit trigger sentinel files and long-lived merged branches obscure
   current intent. Cleanup is repository governance, not package functionality.
 
-## Prioritized milestones
+## Proposed first implementation goal
 
-### M0 — approve scope and freeze claims
+**Make aradR installation, HTTP dependency compatibility, and routine
+validation reliably release-ready without publishing a release.** This goal is
+proposed, not approved. Implementation may begin only after this planning pull
+request is reviewed and merged and the product owner explicitly authorizes it.
 
-Agree on release channel, supported R/dependency floors, public/internal endpoint
-support claim, live request budget, and whether CRAN readiness is an objective.
+### First-goal scope
+
+1. **Dependency compatibility:** verify the existing `httr2`/`curl` boundary on
+   real stacks; keep `curl` direct and `rlang` transitive; select the simplest
+   correct `DESCRIPTION` floors that prevent known-bad combinations where the R
+   solver can do so; and retain a clear pre-request diagnostic for loaded-old-
+   namespace cases that declarations cannot prevent.
+2. **Routine validation:** provide one documented, deterministic offline path
+   for unit tests, source build, clean install/load smoke, and appropriate package
+   checks. PR and push validation must not need an ARAD key; live tests remain
+   separate and opt-in.
+3. **CI safety:** separate validation from tag/release publication. Routine CI
+   must be read-only and unable to target a nonexistent tag or upload assets.
+4. **Focused evidence:** test the current supported stack, the known
+   `httr2`/`curl` compatibility boundary, and a known invalid stack. Preserve
+   R >= 4.1 with a small reproducible job if reasonable; if not, stop with
+   evidence and request an owner decision rather than raising the floor.
+5. **Necessary documentation only:** align README, troubleshooting, NEWS, and
+   only the generated documentation needed for an intentional source of truth.
+   Do not broaden this into editorial or pkgdown redesign.
+6. **Assessment, not release:** record exact evidence and remaining blockers in
+   `docs/CODEX_STATUS.md`. Do not change the version, tag, release, or submit to
+   CRAN.
+
+### Explicitly deferred from the first goal
+
+- new package features, cache architecture work, or public API changes;
+- broad timeout/retry changes or a broad live ARAD audit;
+- CRAN submission work beyond useful package-check hygiene;
+- a large multi-platform release matrix unless focused evidence makes it
+  necessary;
+- old branch cleanup; and
+- versioning, tagging, release assets, and publication.
+
+### First-goal acceptance criteria
+
+- Known-invalid HTTP stacks are blocked by install constraints where feasible or
+  fail before requests with a precise update/restart diagnostic; valid supported
+  stacks work.
+- `curl` remains directly declared and justified. `rlang` remains transitive
+  unless aradR begins using it directly.
+- One documented offline validation entry point runs tests, source build, clean
+  install/load smoke, and appropriate checks successfully.
+- Normal CI is read-only, cannot publish or target tags, and clearly separates
+  live opt-in validation.
+- Dependency/remediation documentation is accurate; public API and behavior are
+  unchanged; no version, tag, release, or CRAN submission is created.
+- `docs/CODEX_STATUS.md` contains exact validation evidence and the remaining
+  release blockers.
+
+## Subsequent milestones
+
+### M0 — approve the proposed first goal
+
+Approve or revise the narrow goal above. Implementation is not authorized merely
+because this plan exists.
 
 **Acceptance:** decisions are written down; no release action is implied.
 
-### M1 — make validation safe and reproducible
+### M1 — complete dependency and routine-validation readiness
 
-Decouple binary/package validation from tag checkout and release upload; make
-routine CI read-only; add current and minimum-stack install/load/test jobs with
-pinned/reconstructable inputs; add metadata consistency checks.
+Execute only the approved first-goal scope: dependency constraints and runtime
+diagnostics, focused compatibility evidence, one routine offline validation path,
+safe read-only CI, and directly necessary documentation hygiene.
 
-**Acceptance:** a normal push/PR cannot create or upload a release, both stacks
-run offline, and failures identify validation rather than missing release state.
+**Acceptance:** all first-goal acceptance criteria above are met and the result is
+a release-readiness assessment, not a release.
 
-### M2 — close deterministic reliability gaps
+### M2 — consider deferred deterministic reliability gaps
 
-Add a local HTTP test server or equivalent deterministic harness for retries,
-timeouts, statuses, error classes, redaction, and response limits; add cache and
-public-schema contract tests. Preserve existing behavior unless a separately
-approved change is required.
+After separate approval, consider broader retry/timeout, cache, redaction, and
+public-schema contract coverage. These are not completion requirements for the
+first goal unless focused dependency validation exposes a directly relevant gap.
 
-**Acceptance:** tests prove the documented behavior without credentials/network,
-including actual httr2 paths on each supported stack.
+**Acceptance:** define focused criteria when this deferred milestone is approved;
+its broader coverage is not part of the first-goal definition of done.
 
-### M3 — reconcile docs and release materials
+### M3 — broader documentation and release-material reconciliation
 
-Synchronize architecture, README/vignette/man pages, NEWS, current RC notes, and
-workflow/checklist language. Regenerate roxygen outputs and validate pkgdown.
+After separate approval, synchronize broader architecture, vignette, pkgdown,
+and release materials. The first goal only updates dependency/remediation docs
+and generated files needed for a clean source of truth.
 
 **Acceptance:** no stale API inventory or conflicting version/channel claim;
 source and generated docs are clean and reproducible.
 
-### M4 — bounded external validation
+### M4 — bounded external validation, if later authorized
 
-After owner authorization, run one current public-endpoint UX smoke and the
-smallest justified calibration audit. Record date, commit, dependency/session
-information, scopes, request budget, and redacted results. Validate Windows R
-4.1 separately if it remains supported.
+After owner authorization, consider a bounded public-endpoint smoke. A broad live
+audit is explicitly deferred from the first goal. Record date, commit,
+dependency/session information, scope, request budget, and redacted results.
 
 **Acceptance:** all chosen invariants pass on the exact candidate commit; skips
 or unavailable secrets are reported as missing evidence, not success.
@@ -256,17 +312,19 @@ Review the complete evidence and remaining known issues. Produce a go/no-go
 recommendation. Actual version/tag/artifact/publication work requires a new,
 explicit product-owner instruction.
 
-## Validation matrix
+## First-goal validation shape
 
-- `testthat::test_local()` offline on current R and R 4.1/minimum dependencies.
+- A single documented offline entry point orchestrates unit tests, source build,
+  clean install/load smoke, and appropriate package checks.
+- Exercise current supported dependencies plus the known `httr2`/`curl` boundary
+  and invalid combination in focused jobs or isolated libraries.
+- Include one small R 4.1 job only if it remains reasonably reproducible; stop
+  and request a decision if evidence shows disproportionate maintenance cost.
 - Build source tarball, install it into a clean library, and load without network,
   key, messages, option mutations, or cache writes.
-- `R CMD check --as-cran` from the tarball on Ubuntu, Windows, and macOS; include
-  current R and the approved minimum/oldrel coverage.
+- Run an appropriate package check from the built tarball. A large multi-OS or
+  release matrix is not a prerequisite unless evidence shows it is necessary.
 - Run roxygen in a clean tree and require no unexplained `NAMESPACE`/`man` diff.
-- Build pkgdown and check links/anchors; validate README/vignette code syntax.
-- Exercise actual old/current httr2+curl combinations and incompatible-stack
-  remediation in isolated libraries.
 - Keep live UX/audit separate, secret-gated, bounded, redacted, and manual.
 
 ## Audit baseline results
@@ -298,7 +356,8 @@ requests because no API key or live request budget was supplied.
 
 1. Product owner approves target version/channel and compatibility policy.
 2. Clean source tree and reviewed changelog/release notes match the candidate.
-3. All M1–M3 offline gates pass on the exact candidate commit.
+3. The approved first-goal offline gates pass on the exact candidate commit;
+   later deferred milestones are not prerequisites unless separately approved.
 4. No unresolved high-severity secret, install, data-integrity, or accidental
    publication issue remains.
 5. Authorized live checks pass recently enough for the agreed freshness window.
@@ -310,13 +369,15 @@ requests because no API key or live request budget was supplied.
 
 ## Decisions needed (maximum five)
 
-1. Is the next target a final 0.2.0, another RC, or reliability hardening with no
-   release target?
-2. Must R 4.1 plus httr2 0.2.2 remain a supported production floor, and for how
-   long, or may floors be raised after measured compatibility evidence?
-3. Is CRAN submission/readiness in scope, or only GitHub source and Windows
-   binary distribution?
-4. What public/internal endpoint platforms are officially supported versus
-   best-effort, especially non-Windows Negotiate authentication?
-5. What live ARAD request budget and evidence freshness are approved for the
-   first implementation goal and future release gates?
+1. After this planning PR is reviewed and merged, is the narrowly defined first
+   implementation goal approved?
+2. If focused validation demonstrates that R 4.1 cannot be supported without
+   disproportionate complexity, should the compatibility floor be raised or
+   should additional maintenance complexity be accepted? No decision is needed
+   unless that evidence is produced.
+3. After the first goal produces its assessment, is the next release target final
+   0.2.0, another RC, or further reliability hardening with no release target?
+4. For later work, is CRAN submission/readiness in scope, or only GitHub source
+   and Windows binary distribution?
+5. For later live validation, what bounded ARAD request budget and evidence
+   freshness are approved? Broad live work is not part of the first goal.

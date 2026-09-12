@@ -8,6 +8,15 @@ approved yet. No release goal is approved yet.** `docs/NEXT_GOAL.md` is a
 proposal only and must not be treated as authorization to change package
 behavior, versions, tags, release assets, or publication state.
 
+The proposed first goal has been narrowed to: **Make aradR installation, HTTP
+dependency compatibility, and routine validation reliably release-ready without
+publishing a release.** Its scope is limited to dependency constraints and
+runtime mismatch diagnostics, one reproducible offline validation path, safe
+read-only routine CI, focused compatibility evidence, and only the documentation
+hygiene necessary for those outcomes. Implementation remains unapproved until
+this planning pull request is reviewed and merged and the product owner
+explicitly authorizes it.
+
 ## Baseline
 
 - Audited revision: `7d67dca` (the checked-out `work` branch and remote `main`
@@ -26,6 +35,11 @@ behavior, versions, tags, release assets, or publication state.
 ## Guardrail
 
 Before autonomous implementation starts, the product owner should explicitly
-approve a goal, its compatibility constraints, whether CI-only fixes are in
-scope, and the live-test budget. Until then, work is limited to review and
-planning.
+approve the proposed goal. Until then, work is limited to review and planning:
+no package source, tests, workflows, release metadata, versions, tags, assets,
+or publication state may be changed.
+
+If approved, completion must record exact offline validation commands, actual
+`httr2`/`curl`/R versions and results, any R 4.1 limitation, skipped live or
+platform evidence, and remaining release blockers here. Completion produces a
+release-readiness assessment only; it does not authorize or perform a release.
