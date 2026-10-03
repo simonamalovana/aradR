@@ -7,11 +7,9 @@ arad_loaded_or_installed_version <- function(package) {
 }
 
 arad_curl_modify_url_available <- function() {
-  # curl_version() is available on both the legacy and current curl stacks we
-  # support. Calling it through the declared namespace import ensures curl is
-  # a genuine direct runtime dependency without referencing curl_modify_url()
-  # on older curl releases where that function does not exist.
-  invisible(curl_version())
+  # Keep curl as an explicit direct runtime dependency: aradR inspects the
+  # loaded curl namespace/capabilities before allowing modern httr2 requests.
+  invisible(curl::curl_version())
   "curl_modify_url" %in% getNamespaceExports(loadNamespace("curl"))
 }
 
