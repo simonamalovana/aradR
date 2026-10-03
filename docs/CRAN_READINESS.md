@@ -10,6 +10,7 @@ Status: preparation in progress. This checklist covers the external/public packa
 - [x] `LICENSE` names Simona Malovana as the copyright holder.
 - [x] Third-party provenance is retained in the distributed package under `inst/NOTICE`.
 - [x] README and user documentation explicitly state that aradR is not official Czech National Bank software and does not imply CNB endorsement.
+- [ ] Confirm whether any source code or substantial implementation was copied/derived from `petrbouchal/cnbrrr` rather than only informed by it. If yes, add the upstream author as an `Authors@R` contributor (`ctb`) and retain attribution with the affected material as required by the MIT license.
 
 ## Package name
 
@@ -80,15 +81,16 @@ Suggested dependencies:
 Before submitting 0.2.0 to CRAN:
 
 1. merge the documentation/ownership cleanup after CI passes;
-2. publish and verify the pkgdown website;
-3. add R-devel `R CMD check --as-cran` CI;
-4. resolve every ERROR/WARNING and investigate every NOTE;
-5. build the final source tarball with `R CMD build`;
-6. run `R CMD check --as-cran` on the tarball, not only on the source directory;
-7. run Win-builder/R-devel against the final tarball;
-8. re-check package-name availability;
-9. prepare `cran-comments.md` with the actual final check environments/results;
-10. submit the source package through the CRAN submission form and confirm the submission email.
+2. confirm the exact `cnbrrr` provenance/derived-code status and add contributor attribution if required;
+3. publish and verify the pkgdown website;
+4. add R-devel `R CMD check --as-cran` CI;
+5. resolve every ERROR/WARNING and investigate every NOTE;
+6. build the final source tarball with `R CMD build`;
+7. run `R CMD check --as-cran` on the tarball, not only on the source directory;
+8. run Win-builder/R-devel against the final tarball;
+9. re-check package-name availability;
+10. prepare `cran-comments.md` with the actual final check environments/results;
+11. submit the source package through the CRAN submission form and confirm the submission email.
 
 ## Explicitly not part of this release
 
