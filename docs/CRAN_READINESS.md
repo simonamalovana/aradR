@@ -37,7 +37,8 @@ Suggested dependencies:
 - [x] Package targets `R >= 4.1.0`.
 - [x] Existing release-readiness CI has passed on Ubuntu, macOS and Windows.
 - [x] A dedicated Windows R 4.1.0 compatibility build/install test has passed with the legacy supported `httr2 0.2.2` stack.
-- [ ] Add a dedicated R-devel source-package `R CMD check --as-cran` gate before submission.
+- [x] Dedicated R-devel source-package CRAN gate added: it builds the source tarball with `R CMD build` and checks that tarball with `R CMD check --as-cran`.
+- [ ] Confirm the first R-devel CRAN-gate run is green and inspect any NOTE reported by `00check.log`.
 - [ ] Run Win-builder/R-devel on the final source tarball before submission.
 
 ## Internet and external API behaviour
@@ -80,17 +81,13 @@ Suggested dependencies:
 
 Before submitting 0.2.0 to CRAN:
 
-1. merge the documentation/ownership cleanup after CI passes;
-2. confirm the exact `cnbrrr` provenance/derived-code status and add contributor attribution if required;
-3. publish and verify the pkgdown website;
-4. add R-devel `R CMD check --as-cran` CI;
-5. resolve every ERROR/WARNING and investigate every NOTE;
-6. build the final source tarball with `R CMD build`;
-7. run `R CMD check --as-cran` on the tarball, not only on the source directory;
-8. run Win-builder/R-devel against the final tarball;
-9. re-check package-name availability;
-10. prepare `cran-comments.md` with the actual final check environments/results;
-11. submit the source package through the CRAN submission form and confirm the submission email.
+1. confirm the exact `cnbrrr` provenance/derived-code status and add contributor attribution if required;
+2. publish and verify the pkgdown website;
+3. confirm the R-devel source-tarball `R CMD check --as-cran` gate is green and investigate every NOTE;
+4. run Win-builder/R-devel against the final tarball;
+5. re-check package-name availability;
+6. prepare `cran-comments.md` with the actual final check environments/results;
+7. submit the source package through the CRAN submission form and confirm the submission email.
 
 ## Explicitly not part of this release
 
