@@ -38,7 +38,8 @@ Suggested dependencies:
 - [x] Existing release-readiness CI has passed on Ubuntu, macOS and Windows.
 - [x] A dedicated Windows R 4.1.0 compatibility build/install test has passed with the legacy supported `httr2 0.2.2` stack.
 - [x] Dedicated R-devel source-package CRAN gate added: it builds the source tarball with `R CMD build` and checks that tarball with `R CMD check --as-cran`.
-- [ ] Confirm the first R-devel CRAN-gate run is green and inspect any NOTE reported by `00check.log`.
+- [x] First R-devel CRAN-gate run passed on 2026-10-03 using R Under development (2026-10-02 r90631) on Ubuntu 24.04.5: 0 ERRORs, 0 WARNINGs, 1 NOTE.
+- [x] The sole NOTE was the expected CRAN incoming-feasibility note identifying the maintainer and `New submission`; package namespace, dependencies, tests, vignettes, PDF manual and HTML manual were all OK.
 - [ ] Run Win-builder/R-devel on the final source tarball before submission.
 
 ## Internet and external API behaviour
@@ -74,8 +75,10 @@ Suggested dependencies:
 
 - [x] Repository is small (approximately 201 KB in GitHub repository metadata on 2026-10-03), far below CRAN package-size concerns.
 - [x] Development-only GitHub/workflow/docs files are excluded from the source package through `.Rbuildignore` where appropriate.
+- [x] The GitHub-only `AUTHORS.md` is excluded from the source tarball; author metadata remains in `Authors@R`.
 - [x] The distributed third-party notice is under `inst/` and is therefore retained in the built package.
-- [ ] Inspect the final `R CMD build` tarball contents before submission.
+- [x] The R-devel gate retains the actual source tarball and complete check directory as CI artifacts for inspection.
+- [ ] Inspect the final submission tarball contents once more immediately before submission.
 
 ## Remaining submission gates
 
@@ -83,11 +86,10 @@ Before submitting 0.2.0 to CRAN:
 
 1. confirm the exact `cnbrrr` provenance/derived-code status and add contributor attribution if required;
 2. publish and verify the pkgdown website;
-3. confirm the R-devel source-tarball `R CMD check --as-cran` gate is green and investigate every NOTE;
-4. run Win-builder/R-devel against the final tarball;
-5. re-check package-name availability;
-6. prepare `cran-comments.md` with the actual final check environments/results;
-7. submit the source package through the CRAN submission form and confirm the submission email.
+3. run Win-builder/R-devel against the final tarball;
+4. re-check package-name availability;
+5. prepare `cran-comments.md` with the actual final check environments/results;
+6. submit the source package through the CRAN submission form and confirm the submission email.
 
 ## Explicitly not part of this release
 
