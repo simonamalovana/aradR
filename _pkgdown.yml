@@ -1,3 +1,4 @@
+url: https://simonamalovana.github.io/aradR/
 destination: site
 
 development:
@@ -5,18 +6,22 @@ development:
 
 template:
   bootstrap: 5
+  light-switch: true
+  theme: github-light
+  theme-dark: github-dark
 
 home:
-  title: "aradR — R client for CNB ARAD"
-  description: "Reliability-first R client and toolkit for the Czech National Bank public ARAD API."
+  title: "aradR — reliable access to CNB ARAD from R"
+  description: "Discover, inspect and retrieve public Czech National Bank ARAD time series with a reliability-first R workflow."
 
 navbar:
   structure:
     left: [reference, articles, news]
-    right: [github]
+    right: [search, github, lightswitch]
 
 reference:
   - title: "Discover and understand indicators"
+    desc: "Browse ARAD scopes, search human-readable metadata and inspect candidate series before retrieval."
     contents:
       - arad_catalog
       - arad_find
@@ -27,15 +32,21 @@ reference:
       - arad_tree
       - arad_snapshots
   - title: "Retrieve and reshape data"
+    desc: "Download validated time series, inspect availability and reshape long data for analysis."
     contents:
       - arad_get
       - arad_updates
       - arad_wide
   - title: "Caching"
+    desc: "Manage the optional response cache used for reproducible repeated requests."
     contents:
       - arad_cache_clear
 
 articles:
-  - title: "Getting started"
+  - title: "Start here"
     contents:
       - get-started
+  - title: "Guides"
+    contents:
+      - find-data
+      - reliability
