@@ -8,7 +8,7 @@ template:
 
 home:
   title: "aradR — R client for CNB ARAD"
-  description: "Reliability-first R client and toolkit for the Czech National Bank ARAD API."
+  description: "Reliability-first R client and toolkit for the Czech National Bank public ARAD API."
 
 navbar:
   structure:
@@ -31,10 +31,6 @@ reference:
       - arad_get
       - arad_updates
       - arad_wide
-  - title: "Endpoint configuration"
-    contents:
-      - arad_use_internal
-      - arad_use_external
   - title: "Caching"
     contents:
       - arad_cache_clear
