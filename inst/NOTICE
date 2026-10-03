@@ -1,6 +1,6 @@
 aradR provenance and third-party license notice
 
-aradR is an independent project. It is not affiliated with, endorsed by, or maintained by the original cnbrrr author, and it should not be represented as an official Czech National Bank package unless project governance changes explicitly.
+aradR is an independent R package authored and maintained by Simona Malovana. It is not official Czech National Bank software and does not imply endorsement by the Czech National Bank.
 
 The initial aradR design and implementation review drew on the MIT-licensed cnbrrr package by Petr Bouchal:
 https://github.com/petrbouchal/cnbrrr
