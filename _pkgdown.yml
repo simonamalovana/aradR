@@ -7,8 +7,6 @@ development:
 template:
   bootstrap: 5
   light-switch: true
-  theme: github-light
-  theme-dark: github-dark
 
 home:
   title: "aradR — reliable access to CNB ARAD from R"
