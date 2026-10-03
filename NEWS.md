@@ -13,14 +13,13 @@
 - Clarified that ARAD-reported `data_to` can extend into forecast/report horizons and is not necessarily the latest observed historical date.
 - Updated onboarding and reference documentation around a browse → find → inspect → retrieve workflow.
 
-## Endpoint configuration and diagnostics
+## Public endpoint and diagnostics
 
-- Added `arad_use_internal()` as an explicit opt-in for organization-provided ARAD endpoints using integrated Negotiate authentication; the public ARAD endpoint remains the default.
-- Internal mode bypasses configured proxies for ARAD requests and uses the current integrated login rather than storing a Windows password in R.
-- Added `arad_use_external()` to restore the public endpoint and normal network handling.
-- Improved pre-response HTTP diagnostics so proxy/connection failures retain the underlying redacted error instead of collapsing to a generic message; HTTP 401 responses are now classified as authentication errors.
+- Scoped aradR 0.2.0 to the public Czech National Bank ARAD API only.
+- Removed the prerelease `arad_use_internal()` / `arad_use_external()` endpoint-mode helpers and integrated Negotiate/proxy-bypass transport so private-network authentication can evolve separately from the public package.
+- The default endpoint can no longer be redirected through the legacy `aradR.base_url` option; explicit `base_url` arguments remain available for testing and advanced request control.
+- Improved pre-response HTTP diagnostics so proxy/connection failures retain the underlying redacted error instead of collapsing to a generic message; HTTP 401 responses are classified as authentication errors with public-API-key guidance.
 - Added an early compatibility check for the HTTP stack: legacy `httr2 0.2.2` remains supported, while `httr2 >= 1.2.0` is paired with its required `curl >= 6.4.0`; incompatible installations now fail with an actionable update-and-restart message.
-- Internal endpoint addresses and credentials are not embedded in the public package.
 
 ## Live validation and compatibility
 
