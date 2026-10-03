@@ -9,6 +9,21 @@ on:
       - 'R/**'
       - 'tests/**'
       - 'man/**'
+      - 'vignettes/**'
+      - '.Rbuildignore'
+      - '.github/release-candidate-trigger'
+      - '.github/workflows/R-CMD-check.yaml'
+  push:
+    branches: [main]
+    paths:
+      - 'DESCRIPTION'
+      - 'NAMESPACE'
+      - 'R/**'
+      - 'tests/**'
+      - 'man/**'
+      - 'vignettes/**'
+      - '.Rbuildignore'
+      - '.github/release-candidate-trigger'
       - '.github/workflows/R-CMD-check.yaml'
   workflow_dispatch:
 
@@ -19,10 +34,10 @@ env:
   R_KEEP_PKG_SOURCE: yes
 
 jobs:
-  pr-check:
-    if: github.event_name == 'pull_request'
+  routine-check:
+    if: github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
-    name: ubuntu-latest (release, PR)
+    name: ubuntu-latest (release, routine)
 
     steps:
       - uses: actions/checkout@v4

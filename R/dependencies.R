@@ -6,11 +6,17 @@ arad_loaded_or_installed_version <- function(package) {
   utils::packageVersion(package)
 }
 
+arad_curl_modify_url_available <- function() {
+  # Keep curl as an explicit direct runtime dependency: aradR inspects the
+  # loaded curl namespace/capabilities before allowing modern httr2 requests.
+  invisible(curl::curl_version())
+  "curl_modify_url" %in% getNamespaceExports(loadNamespace("curl"))
+}
+
 arad_check_http_dependencies <- function(
     httr2_version = arad_loaded_or_installed_version("httr2"),
     curl_version = arad_loaded_or_installed_version("curl"),
-    curl_modify_url_available = "curl_modify_url" %in%
-      getNamespaceExports(loadNamespace("curl"))) {
+    curl_modify_url_available = arad_curl_modify_url_available()) {
   httr2_version <- as.character(httr2_version)
   curl_version <- as.character(curl_version)
 

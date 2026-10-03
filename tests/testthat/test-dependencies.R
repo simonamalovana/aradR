@@ -1,3 +1,7 @@
+test_that("installed HTTP stack passes the compatibility guard", {
+  expect_invisible(aradR:::arad_check_http_dependencies())
+})
+
 test_that("legacy workplace HTTP stack remains supported", {
   expect_invisible(
     aradR:::arad_check_http_dependencies(
