@@ -1,4 +1,4 @@
-arad_request_failure_message <- function(endpoint, error, api_key, mode) {
+arad_request_failure_message <- function(endpoint, error, api_key) {
   detail <- conditionMessage(error)
   detail <- arad_redact(detail, api_key)
   detail <- gsub("api_key=[^&[:space:]]+", "api_key=<redacted>", detail, perl = TRUE)
@@ -11,11 +11,9 @@ arad_request_failure_message <- function(endpoint, error, api_key, mode) {
   hint <- ""
   if (grepl("proxy after CONNECT", detail, ignore.case = TRUE)) {
     hint <- paste0(
-      " The network proxy blocked the connection before ARAD was reached.",
-      " For an integrated internal endpoint, use `arad_use_internal()` rather than only changing `base_url`."
+      " The network proxy blocked the connection before the public ARAD API was reached.",
+      " Check your network/proxy configuration and try again."
     )
-  } else if (identical(mode, "internal")) {
-    hint <- " Internal mode could not establish an authenticated connection to the configured endpoint."
   }
 
   if (nzchar(detail)) {
@@ -44,7 +42,6 @@ arad_request_raw <- function(endpoint,
 
   base_url <- arad_base_url(base_url)
   api_key <- arad_api_key(api_key)
-  mode <- arad_request_mode(base_url)
 
   request <- httr2::request(base_url) |>
     httr2::req_url_path_append(endpoint) |>
@@ -52,14 +49,13 @@ arad_request_raw <- function(endpoint,
     httr2::req_user_agent("aradR R package") |>
     httr2::req_timeout(seconds = timeout) |>
     httr2::req_retry(max_tries = max_tries) |>
-    httr2::req_error(is_error = function(resp) FALSE) |>
-    arad_apply_transport(mode = mode)
+    httr2::req_error(is_error = function(resp) FALSE)
 
   response <- tryCatch(
     httr2::req_perform(request),
     error = function(e) {
       arad_abort(
-        arad_request_failure_message(endpoint, e, api_key, mode),
+        arad_request_failure_message(endpoint, e, api_key),
         "arad_http_error"
       )
     }
@@ -75,10 +71,10 @@ arad_request_raw <- function(endpoint,
     }
 
     suffix <- if (nzchar(body)) paste0(" Server response: ", body) else ""
-    if (status == 401L && identical(mode, "internal")) {
+    if (status == 401L) {
       suffix <- paste0(
         suffix,
-        " Integrated authentication was not accepted. Verify that the session is running under an authorized login and that Negotiate authentication is available."
+        " Verify that the ARAD API key is valid and authorized for the requested public endpoint."
       )
     }
 
