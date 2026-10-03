@@ -11,7 +11,7 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 ```
 
-`aradR` is a reliability-first R client for the Czech National Bank ARAD API. A typical workflow is:
+`aradR` is a reliability-first R client for the public Czech National Bank ARAD API. A typical workflow is:
 
 1. configure an ARAD API key;
 2. browse or search a scoped ARAD catalogue without knowing indicator IDs;
@@ -29,7 +29,7 @@ pak::pak("simonamalovana/aradR")
 # alternatively: remotes::install_github("simonamalovana/aradR")
 ```
 
-The repository is currently private, so installation requires GitHub access until the project is made public.
+The repository is public, so no GitHub account is required to view the source.
 
 ## Configure the API key
 
@@ -40,6 +40,8 @@ ARAD_API_KEY=your_key_here
 ```
 
 Restart R after editing `.Renviron`. Never commit the key to a repository, notebook, vignette, screenshot, or example output.
+
+`aradR 0.2.0` targets the public CNB ARAD API only. Organization-internal endpoints and integrated authentication are intentionally outside this package.
 
 ## Discover indicators
 

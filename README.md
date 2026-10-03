@@ -1,14 +1,14 @@
 # aradR
 
-Modern R client and toolkit for the Czech National Bank ARAD API.
+Modern R client and toolkit for the Czech National Bank public ARAD API.
 
-`aradR` is an independent, reliability-first R package for discovering, retrieving, validating, reshaping, and working reproducibly with data from the Czech National Bank's ARAD database.
+`aradR` is an independent, reliability-first R package for discovering, retrieving, validating, reshaping, and working reproducibly with data from the Czech National Bank's public ARAD database API.
 
 **Author and maintainer:** Simona Malovana
 
 ## Project status
 
-**Release candidate (`0.2.0`).** The core retrieval API is reliability-calibrated, the human-readable discovery workflow has been validated against the live ARAD API, and the public API is frozen for the 0.2.0 release candidate.
+**Release candidate (`0.2.0`).** The core retrieval API is reliability-calibrated, the human-readable discovery workflow has been validated against the live public ARAD API, and the public API is frozen for the 0.2.0 release candidate.
 
 ## Install
 
@@ -71,25 +71,9 @@ For a full available history, omit `from` and `to`.
 
 Exactly one ARAD selector is accepted where a scoped endpoint requires one: `indicator_ids`, `set_id`, `base_id`, or `selection_id`.
 
-## Internal/custom ARAD endpoints
+## Endpoint scope
 
-The public ARAD API is always the default. Users who have access to an organization-provided ARAD endpoint protected by integrated Negotiate authentication can opt in explicitly:
-
-```r
-arad_use_internal("https://internal.example/api/v1")
-
-catalog <- arad_catalog(set_id = 1058)
-```
-
-`arad_use_internal()` bypasses configured proxies for those ARAD requests and asks libcurl to use the current integrated login. This behaviour has been validated with Windows integrated authentication. The internal base URL can alternatively be stored in `ARAD_INTERNAL_BASE_URL` and then enabled with `arad_use_internal()`.
-
-Return to the public endpoint with:
-
-```r
-arad_use_external()
-```
-
-Internal endpoint addresses and credentials are deliberately not built into the public package.
+`aradR 0.2.0` targets the **public Czech National Bank ARAD API only**. Organization-internal endpoints, integrated Windows authentication, proxy-specific internal transport, and other private-network behavior are intentionally outside this package and can evolve separately without delaying or destabilizing the public client.
 
 ## Discovery workflow
 
@@ -134,7 +118,7 @@ info$updates
 - snapshot support;
 - opt-in session or disk caching;
 - retrieval diagnostics for reproducibility;
-- automated tests plus bounded live ARAD audits and live UX acceptance checks.
+- automated tests plus bounded live public-ARAD audits and live UX acceptance checks.
 
 ## Retrieval model
 

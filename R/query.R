@@ -11,7 +11,7 @@ arad_validate_base_url <- function(base_url) {
 
 arad_base_url <- function(base_url = NULL) {
   if (is.null(base_url)) {
-    base_url <- getOption("aradR.base_url", arad_external_base_url())
+    base_url <- arad_external_base_url()
   }
   arad_validate_base_url(base_url)
 }

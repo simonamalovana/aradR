@@ -1,6 +1,6 @@
 # Troubleshooting aradR
 
-This guide is for problems that arise while discovering or retrieving ARAD data. Do not paste API keys into issues, logs, screenshots, or reproducible examples.
+This guide is for problems that arise while discovering or retrieving data from the public Czech National Bank ARAD API. Do not paste API keys into issues, logs, screenshots, or reproducible examples.
 
 ## `ARAD_API_KEY` is missing
 
@@ -14,6 +14,23 @@ ARAD_API_KEY=your_key_here
 
 Restart R after changing `.Renviron`.
 
+## HTTP dependency compatibility
+
+If aradR reports an HTTP dependency error, first check:
+
+```r
+packageVersion("httr2")
+packageVersion("curl")
+```
+
+The legacy `httr2 0.2.2` stack remains supported. With `httr2 >= 1.2.0`, aradR requires `curl >= 6.4.0` and the corresponding `curl_modify_url()` capability. If the message asks you to update `curl`, run:
+
+```r
+install.packages("curl")
+```
+
+Then restart R before retrying so an older already-loaded `curl` namespace is not reused.
+
 ## HTTP 400 / invalid request
 
 Check that:
@@ -26,25 +43,15 @@ Check that:
 
 Server messages are surfaced where possible, but credentials are redacted.
 
-## Internal endpoint: proxy 303 or HTTP 401
+## HTTP 401 / authentication
 
-The public ARAD endpoint is the package default. If your organization provides an internal ARAD endpoint that uses integrated Negotiate authentication, enable it with `arad_use_internal()` rather than changing only `options(aradR.base_url = ...)`.
+An HTTP 401 response means the public ARAD API did not accept the supplied key for the request. Confirm that `ARAD_API_KEY` is current and that the key is authorized for the requested public endpoint.
 
-```r
-arad_use_internal("https://internal.example/api/v1")
-```
+`aradR 0.2.0` does not implement organization-internal endpoints or integrated Windows authentication; those concerns are intentionally outside the public package.
 
-Internal mode bypasses configured proxies for ARAD requests and asks libcurl to authenticate with the current integrated login. It has been validated with Windows integrated authentication.
+## Proxy or connection errors
 
-A low-level error such as `Received HTTP code 303 from proxy after CONNECT` means a network proxy intercepted the connection before ARAD was reached. In internal mode, aradR bypasses that proxy for the ARAD request.
-
-An HTTP 401 response in internal mode means the endpoint was reached but integrated authentication was not accepted. Confirm that the R session is running under an authorized login and that Negotiate authentication is available. Do not put a Windows password into R code.
-
-Restore normal public-endpoint behaviour with:
-
-```r
-arad_use_external()
-```
+A low-level error such as `Received HTTP code 303 from proxy after CONNECT` means a network proxy intercepted the connection before the public ARAD API was reached. aradR preserves the redacted underlying transport message so you can diagnose the network path. Check your proxy/network configuration rather than repeatedly retrying the API.
 
 ## No rows returned
 

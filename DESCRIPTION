@@ -5,7 +5,7 @@ Version: 0.2.0
 Authors@R: c(
     person("Simona", "Malovana", email = "simona.malovana@gmail.com", role = c("aut", "cre"))
   )
-Description: Provides a reliability-first interface to the Czech National Bank
+Description: Provides a reliability-first interface to the public Czech National Bank
     ARAD API for discovering indicators, browsing human-readable metadata,
     retrieving and validating time series, working with dimensions and
     snapshots, reshaping data, and building reproducible data workflows. The
