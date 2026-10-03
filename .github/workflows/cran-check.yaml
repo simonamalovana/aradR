@@ -1,0 +1,115 @@
+name: CRAN check (R-devel)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'DESCRIPTION'
+      - 'NAMESPACE'
+      - 'R/**'
+      - 'man/**'
+      - 'tests/**'
+      - 'vignettes/**'
+      - 'inst/**'
+      - 'README.md'
+      - 'NEWS.md'
+      - 'LICENSE'
+      - '.Rbuildignore'
+      - '.github/workflows/cran-check.yaml'
+  push:
+    branches: [main]
+    paths:
+      - 'DESCRIPTION'
+      - 'NAMESPACE'
+      - 'R/**'
+      - 'man/**'
+      - 'tests/**'
+      - 'vignettes/**'
+      - 'inst/**'
+      - 'README.md'
+      - 'NEWS.md'
+      - 'LICENSE'
+      - '.Rbuildignore'
+      - '.github/workflows/cran-check.yaml'
+  workflow_dispatch:
+
+permissions: read-all
+
+env:
+  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+  R_KEEP_PKG_SOURCE: yes
+
+jobs:
+  cran-r-devel:
+    name: R-devel source tarball --as-cran
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'devel'
+          http-user-agent: 'release'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-tinytex@v2
+        env:
+          TINYTEX_INSTALLER: TinyTeX
+
+      - name: Install CRAN check system tools
+        shell: bash
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y tidy
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - name: Build CRAN source tarball
+        shell: bash
+        run: |
+          set -euo pipefail
+          R CMD build .
+          tarball=$(ls -1t aradR_*.tar.gz | head -n 1)
+          test -n "$tarball"
+          echo "TARBALL=$tarball" >> "$GITHUB_ENV"
+          echo "Built source package: $tarball"
+
+      - name: Check source tarball with R-devel --as-cran
+        shell: bash
+        run: |
+          set -uo pipefail
+          R CMD check --as-cran "$TARBALL" 2>&1 | tee cran-check.log
+          check_status=${PIPESTATUS[0]}
+
+          if [ -f aradR.Rcheck/00check.log ]; then
+            echo '### R-devel `R CMD check --as-cran`' >> "$GITHUB_STEP_SUMMARY"
+            grep '^Status:' aradR.Rcheck/00check.log >> "$GITHUB_STEP_SUMMARY" || true
+          fi
+
+          if [ "$check_status" -ne 0 ]; then
+            exit "$check_status"
+          fi
+
+          if grep -Eq '^Status:.*(ERROR|WARNING)' aradR.Rcheck/00check.log; then
+            echo 'CRAN gate failed: ERROR or WARNING found.'
+            grep '^Status:' aradR.Rcheck/00check.log || true
+            exit 1
+          fi
+
+      - name: Upload CRAN check artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aradR-cran-r-devel
+          path: |
+            aradR_*.tar.gz
+            cran-check.log
+            aradR.Rcheck/**
+          if-no-files-found: warn
