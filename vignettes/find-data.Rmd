@@ -1,0 +1,110 @@
+---
+title: "Finding data in ARAD"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Finding data in ARAD}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+```
+
+ARAD contains many time series, and the most useful workflow is often to start from a subject rather than from a known indicator ID. `aradR` provides a small discovery layer for that task.
+
+## Start from a scope
+
+ARAD metadata endpoints are scoped. Supply exactly one of a set, base, selection, or indicator selector when the endpoint requires it.
+
+```r
+library(aradR)
+
+catalog <- arad_catalog(set_id = 1058, lang = "en")
+```
+
+`arad_catalog()` returns one row per indicator and can enrich the basic metadata with hierarchy paths and availability information.
+
+## Search human-readable metadata
+
+Use `arad_find()` when you know what you are looking for conceptually but do not know the indicator code:
+
+```r
+hits <- arad_find(
+  "inflation",
+  set_id = 1058,
+  lang = "en"
+)
+```
+
+The search covers indicator IDs and names, hierarchy paths, and—by default—dimension metadata. Results are ranked deterministically.
+
+```r
+hits[, c(
+  "indicator_id",
+  "indicator_name",
+  "relevance_score",
+  "matched_in"
+)]
+```
+
+`matched_in` explains whether the term matched the indicator ID, indicator name, hierarchy path or dimensions. The numeric relevance score is only an ordering device for the current query; it is not a measure of statistical importance.
+
+## Narrow by frequency
+
+When a scope contains several frequencies, filter during discovery:
+
+```r
+monthly <- arad_find(
+  "households",
+  base_id = "MBOP",
+  frequency = "M",
+  lang = "en"
+)
+```
+
+## Inspect before downloading
+
+Once you have plausible candidates, inspect them before retrieving observations:
+
+```r
+info <- arad_info(hits$indicator_id[1], lang = "en")
+
+info$summary
+info$dimensions
+info$updates
+```
+
+The summary includes hierarchy and ARAD-reported availability. `data_to` can include a future forecast or reporting horizon, so do not automatically interpret it as the latest observed historical date.
+
+## Use the lightweight search when appropriate
+
+`arad_search()` is faster and simpler when searching only basic indicator names and IDs is sufficient:
+
+```r
+quick_hits <- arad_search(
+  "inflation",
+  set_id = 1058,
+  lang = "en"
+)
+```
+
+A practical rule is:
+
+- use `arad_catalog()` to browse a scope;
+- use `arad_find()` for human-readable discovery;
+- use `arad_info()` to inspect candidates;
+- use `arad_search()` when you only need a lightweight name/ID filter.
+
+## Retrieve the selected series
+
+After discovery, pass the selected ID directly to `arad_get()`:
+
+```r
+x <- arad_get(
+  indicator_ids = hits$indicator_id[1],
+  from = "2020-01-01"
+)
+```
+
+This keeps discovery and retrieval separate: first decide what the series represents, then download the observations needed for the analysis.

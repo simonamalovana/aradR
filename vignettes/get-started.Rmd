@@ -11,29 +11,35 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
 ```
 
-`aradR` is a reliability-first R client for the public Czech National Bank ARAD API. A typical workflow is:
+`aradR` is an independent R client for the public Czech National Bank ARAD API. It is designed around a simple workflow:
 
 1. configure an ARAD API key;
-2. browse or search a scoped ARAD catalogue without knowing indicator IDs;
-3. inspect candidate metadata;
-4. retrieve a bounded or full history;
-5. reshape the result if a wide table is more convenient;
-6. inspect retrieval diagnostics when reproducibility matters.
+2. find a series using human-readable metadata;
+3. inspect the candidate before downloading observations;
+4. retrieve a bounded window or the full available history;
+5. reshape the result when a wide analytical table is more convenient;
+6. retain diagnostics when reproducibility matters.
+
+`aradR` is a personal open-source project authored and maintained by Simona Malovana. It is not official Czech National Bank software.
 
 ## Install
 
-During development, install from GitHub:
+For the released package on CRAN:
+
+```r
+install.packages("aradR")
+```
+
+For the current development version:
 
 ```r
 pak::pak("simonamalovana/aradR")
 # alternatively: remotes::install_github("simonamalovana/aradR")
 ```
 
-The repository is public, so no GitHub account is required to view the source.
-
 ## Configure the API key
 
-Create an ARAD API key in your ARAD account and store it outside source code. A convenient place is `~/.Renviron`:
+ARAD API access requires a key associated with an ARAD user account. Generate the key in ARAD and store it outside source code. A convenient place is `~/.Renviron`:
 
 ```text
 ARAD_API_KEY=your_key_here
@@ -41,39 +47,43 @@ ARAD_API_KEY=your_key_here
 
 Restart R after editing `.Renviron`. Never commit the key to a repository, notebook, vignette, screenshot, or example output.
 
-`aradR 0.2.0` targets the public CNB ARAD API only. Organization-internal endpoints and integrated authentication are intentionally outside this package.
+`aradR 0.2.0` targets the public ARAD API only. Organization-internal endpoints and integrated authentication are intentionally outside this package.
 
-## Discover indicators
+## Find a series
 
-ARAD metadata endpoints are scoped. Start from a known set, base, selection, or indicator ID; `aradR` then removes the need to know individual series IDs in advance.
+ARAD metadata endpoints are scoped. Start from a known set, base, selection, or indicator ID. Within that scope, `aradR` removes the need to know individual series IDs in advance.
 
 ```r
 library(aradR)
 
-# Browse every indicator in a scope with path and availability metadata
-catalog <- arad_catalog(set_id = 1058, lang = "en")
-
-# Search names, hierarchy paths and dimension labels/values
 hits <- arad_find(
   "inflation",
   set_id = 1058,
   lang = "en"
 )
 
-hits
+hits[, c("indicator_id", "indicator_name", "relevance_score", "matched_in")]
 ```
 
-`arad_find()` returns one row per matching indicator. With its default `details = TRUE`, it also includes `data_from`, `data_to`, `last_update`, and `snapshot_contexts`.
+`arad_find()` searches indicator names and IDs, hierarchy paths and, by default, dimension metadata. Results are ranked deterministically, and `matched_in` explains which metadata fields produced the match.
 
-If you only need a lightweight name/ID search, use `arad_search()` instead.
+For browsing rather than searching, build a catalogue:
+
+```r
+catalog <- arad_catalog(set_id = 1058, lang = "en")
+```
+
+For a lightweight name/ID search, use `arad_search()`:
 
 ```r
 quick_hits <- arad_search("inflation", set_id = 1058, lang = "en")
 ```
 
+See the *Finding data* article for a fuller discovery workflow.
+
 ## Inspect a candidate
 
-Before downloading data, inspect the selected series in detail:
+Before downloading observations, inspect the selected series:
 
 ```r
 info <- arad_info(hits$indicator_id[1], lang = "en")
@@ -83,27 +93,27 @@ info$dimensions
 info$updates
 ```
 
-The summary combines basic metadata, hierarchy path and availability. The other list elements preserve detailed dimension definitions and update rows.
+The summary combines basic metadata, hierarchy path and ARAD-reported availability. `data_from` and `data_to` are availability boundaries; `data_to` can extend into a forecast or reporting horizon and should not automatically be interpreted as the latest observed historical date.
 
 ## Retrieve data
-
-For a full available history, omit the date boundaries. `aradR` resolves the range through `/updates` and divides long histories into bounded requests.
-
-```r
-x <- arad_get(indicator_ids = hits$indicator_id[1])
-```
 
 For a reproducible analytical window, specify dates explicitly:
 
 ```r
 x <- arad_get(
   indicator_ids = hits$indicator_id[1],
-  from = "2015-01-01",
+  from = "2020-01-01",
   to = "2026-01-01"
 )
 ```
 
-The returned data are long-format tibbles with `indicator_id`, `snapshot_id`, `period`, and `value`. Genuine missing source values remain `NA`.
+For the full ARAD-reported history, omit the date boundaries:
+
+```r
+x <- arad_get(indicator_ids = hits$indicator_id[1])
+```
+
+`aradR` resolves missing boundaries through `/updates` and divides long histories into bounded requests. The returned data are long-format tibbles with `indicator_id`, `snapshot_id`, `period`, and `value`. Genuine missing source values remain `NA`.
 
 ## Reshape to a wide table
 
@@ -114,7 +124,7 @@ wide
 
 `arad_wide()` keeps one row per period. If the same indicator is present in several snapshot contexts, snapshot IDs are added to the series names automatically so observations are not conflated.
 
-## Snapshots
+## Work with snapshots
 
 List available snapshots with:
 
@@ -122,7 +132,7 @@ List available snapshots with:
 snaps <- arad_snapshots(lang = "en")
 ```
 
-Then request a specific snapshot or ARAD's special snapshot selectors through `snapshot_ids`:
+Then request a specific snapshot or an ARAD snapshot selector through `snapshot_ids`:
 
 ```r
 snapshot_data <- arad_get(
@@ -131,7 +141,7 @@ snapshot_data <- arad_get(
 )
 ```
 
-## Caching
+## Use caching only when you want it
 
 Caching is off by default. Enable it explicitly when repeated calls should reuse raw responses:
 
@@ -151,9 +161,9 @@ Clear package caches with:
 arad_cache_clear()
 ```
 
-API keys are not stored in cached response files.
+Disk caching uses R's user cache directory. API keys are not stored in cached response files.
 
-## Diagnostics
+## Keep retrieval diagnostics
 
 Every `arad_get()` result carries retrieval diagnostics:
 
@@ -161,10 +171,8 @@ Every `arad_get()` result carries retrieval diagnostics:
 attr(x, "arad_diagnostics")
 ```
 
-The diagnostics report the strategy, resolved range, number of data requests and the chunk size used. `arad_wide()` preserves this attribute.
+The diagnostics report the retrieval strategy, resolved range, number of data requests and chunk size used. `arad_wide()` preserves this attribute.
 
-## Reproducible use
+For analytical work, record the indicator IDs, requested date range, snapshot choice if relevant, package version and retrieval diagnostics. When presenting ARAD data, cite the underlying data source as Czech National Bank ARAD; package citation and data-source citation are separate.
 
-For analytical work, record the indicator IDs, requested date range, snapshot choice if relevant, package version, and retrieval diagnostics. When presenting ARAD data, cite the data source as Czech National Bank ARAD (for example, `Source: CNB ARAD`).
-
-If a request fails or results look surprising, see the repository's troubleshooting guide before retrying repeatedly; ARAD asks users not to overload the API with excessive request volume or frequency.
+For details on chunking, parsing, missing values and error handling, continue with the *Reliability and reproducibility* article.

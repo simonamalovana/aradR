@@ -1,0 +1,111 @@
+---
+title: "Reliability and reproducibility"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Reliability and reproducibility}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+```
+
+`aradR` is deliberately conservative about retrieval. Its default behaviour favours explicit validation and reproducibility over silently returning partially parsed or ambiguous data.
+
+## Bounded retrieval for long histories
+
+`arad_get()` uses `strategy = "auto"` by default. When date boundaries are missing, the package resolves them through ARAD `/updates`. Long histories are then divided into deterministic bounded intervals before calling `/data`.
+
+```r
+x <- arad_get(indicator_ids = "SMV5M603")
+```
+
+For a fixed analytical window, specify the dates explicitly:
+
+```r
+x <- arad_get(
+  indicator_ids = "SMV5M603",
+  from = "2010-01-01",
+  to = "2026-01-01"
+)
+```
+
+The direct strategy remains available mainly for diagnostics and comparison:
+
+```r
+x_direct <- arad_get(
+  indicator_ids = "SMV5M603",
+  from = "2010-01-01",
+  to = "2026-01-01",
+  strategy = "direct"
+)
+```
+
+## Character-first parsing
+
+API fields are ingested as character data first and validated before conversion. This avoids treating a malformed non-missing value as an ordinary numeric `NA`.
+
+The package checks structural fields, dates, numeric values and observation keys before returning the result.
+
+## Missing values are data
+
+A genuine missing value reported by ARAD remains `NA`. Missingness alone is not treated as retrieval corruption.
+
+This distinction matters for long time series: the package validates structure and overlap consistency without assuming that every missing observation should be re-fetched or replaced.
+
+## Chunk boundaries and duplicates
+
+When adjacent retrieval chunks overlap at a boundary, identical observations can be collapsed safely. If the same indicator, snapshot and period appear with conflicting values, `aradR` stops with an integrity error rather than choosing one value silently.
+
+## Transient failures and unavailable Internet resources
+
+HTTP requests use bounded retries for transient failures. Network, proxy, authentication and server failures are converted into package-specific errors with the API key redacted from surfaced diagnostics.
+
+If the public ARAD service is unavailable, the package fails with an informative `arad_http_error` rather than silently returning incomplete data.
+
+## Diagnostics
+
+Every `arad_get()` result carries an `arad_diagnostics` attribute:
+
+```r
+attr(x, "arad_diagnostics")
+```
+
+It records the retrieval strategy, resolved range, request count and chunk size. The attribute is preserved by `arad_wide()`.
+
+For reproducible analytical work, retain at least:
+
+- indicator IDs;
+- requested date boundaries;
+- snapshot selection, when relevant;
+- the installed `aradR` version;
+- retrieval diagnostics.
+
+## Caching
+
+Caching is explicit and off by default. Session caching stays in memory; disk caching uses R's package-specific user cache directory.
+
+```r
+x <- arad_get("SMV5M603", cache = "session")
+
+x <- arad_get(
+  "SMV5M603",
+  cache = "disk",
+  cache_max_age = 3600
+)
+```
+
+Clear cached responses with:
+
+```r
+arad_cache_clear()
+```
+
+API keys are not stored in cache files. A one-way credential hash is used only to avoid collisions between cached responses belonging to different credentials.
+
+## Reliability calibration
+
+The current default chunk size was calibrated against finer-grained reference retrievals across monthly, quarterly, annual and daily histories, including multi-indicator and snapshot-backed requests. Across the completed calibration matrix, the normal chunked retrieval matched the finer references without key, missing-value or numeric-value differences.
+
+The live audit is intentionally bounded and rate-limited. Routine package checks do not require an ARAD API key and do not exercise the live service unless explicitly opted in.
