@@ -1,161 +1,133 @@
 # aradR
 
-Modern R client and toolkit for the Czech National Bank public ARAD API.
+[![R-CMD-check](https://github.com/simonamalovana/aradR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/simonamalovana/aradR/actions/workflows/R-CMD-check.yaml)
 
-`aradR` is an independent, reliability-first R package for discovering, retrieving, validating, reshaping, and working reproducibly with data from the Czech National Bank's public ARAD database API.
+**Reliable access to Czech National Bank ARAD data from R.**
 
-**Author and maintainer:** Simona Malovana
+`aradR` is an independent open-source R package for discovering, inspecting, retrieving and reshaping time series from the public Czech National Bank ARAD API. It is designed for analytical workflows where reliable long-range retrieval, explicit validation and reproducibility matter.
 
-## Project status
-
-**Release candidate (`0.2.0`).** The core retrieval API is reliability-calibrated, the human-readable discovery workflow has been validated against the live public ARAD API, and the public API is frozen for the 0.2.0 release candidate.
+> `aradR` is a personal project authored and maintained by Simona Malovana. It is not official Czech National Bank software and does not imply CNB endorsement.
 
 ## Install
 
-For the current release-candidate build:
+The package is being prepared for CRAN. Until the first CRAN release, install the current version from GitHub:
 
 ```r
 pak::pak("simonamalovana/aradR")
-# alternatively:
+# or
 remotes::install_github("simonamalovana/aradR")
 ```
 
-The repository is public, so no GitHub account is required to view the source or release assets.
-
-If an HTTP dependency error occurs, check the two relevant package versions:
+After the CRAN release, the standard installation will be:
 
 ```r
-packageVersion("httr2")
-packageVersion("curl")
+install.packages("aradR")
 ```
-
-The workplace-compatible legacy stack with `httr2 0.2.2` remains supported.
-`httr2 >= 1.2.0` requires `curl >= 6.4.0`; `aradR` checks this combination
-before making a request and gives an explicit update-and-restart instruction
-instead of exposing an internal `curl_modify_url` error.
 
 ## Quick start
 
-Store your ARAD API key outside source code, preferably in `~/.Renviron`:
+ARAD API access requires an API key. Store it outside source code, for example in `~/.Renviron`:
 
 ```text
 ARAD_API_KEY=your_key_here
 ```
 
-Then browse, find, inspect and retrieve data:
+Then discover a series using human-readable metadata and retrieve it:
 
 ```r
 library(aradR)
 
-# Browse a known ARAD scope without knowing indicator IDs
-catalog <- arad_catalog(set_id = 1058, lang = "en")
-
-# Human-readable search across names, hierarchy paths and dimensions
-hits <- arad_find("inflation", set_id = 1058, lang = "en")
-
-# Inspect a candidate before downloading observations
-info <- arad_info(hits$indicator_id[1], lang = "en")
-
-# Retrieve the selected series
-x <- arad_get(
-  indicator_ids = hits$indicator_id[1],
-  from = "2015-01-01",
-  to = "2026-01-01"
+hits <- arad_find(
+  "inflation",
+  set_id = 1058,
+  lang = "en"
 )
 
-# Optional wide analytical table
-wide <- arad_wide(x)
+info <- arad_info(hits$indicator_id[1], lang = "en")
+
+data <- arad_get(
+  indicator_ids = hits$indicator_id[1],
+  from = "2020-01-01"
+)
+
+wide <- arad_wide(data)
 ```
 
-For a full available history, omit `from` and `to`.
+You do not need to know an indicator ID in advance. Start from a known ARAD set, base, selection or indicator and use `arad_find()` or `arad_catalog()` to explore the available series.
 
-Exactly one ARAD selector is accepted where a scoped endpoint requires one: `indicator_ids`, `set_id`, `base_id`, or `selection_id`.
+## Why aradR
 
-## Endpoint scope
+- **Human-readable discovery** — search names, hierarchy paths and dimension metadata.
+- **Reliable long-history retrieval** — bounded requests and deterministic chunking instead of one fragile large download.
+- **Strict validation** — malformed dates, values, structures and conflicting duplicate observations fail explicitly.
+- **Genuine missing values preserved** — source `NA` values are not silently discarded.
+- **Snapshots supported** — retrieve current or snapshot-backed series without conflating observations.
+- **Reproducible diagnostics** — retrieval strategy, resolved range and request count travel with the result.
+- **Optional caching** — session or disk caching is explicit and off by default.
 
-`aradR 0.2.0` targets the **public Czech National Bank ARAD API only**. Organization-internal endpoints, integrated Windows authentication, proxy-specific internal transport, and other private-network behavior are intentionally outside this package and can evolve separately without delaying or destabilizing the public client.
+## Core workflow
 
-## Discovery workflow
-
-ARAD's metadata endpoints are scoped: they do not expose one unscoped global indicator catalogue. `aradR` therefore keeps the scope explicit while removing the need to know indicator IDs in advance.
+### 1. Find data
 
 ```r
-# One row per indicator, including hierarchy path and availability
-catalog <- arad_catalog(base_id = "MBOP", lang = "en")
+catalog <- arad_catalog(set_id = 1058, lang = "en")
 
-# Rich human-readable search
 hits <- arad_find(
-  "households",
-  base_id = "MBOP",
-  lang = "en",
-  frequency = "M"
+  "inflation",
+  set_id = 1058,
+  lang = "en"
 )
 
-# See why the leading results matched
 hits[, c("indicator_id", "indicator_name", "relevance_score", "matched_in")]
+```
 
-# Detailed metadata for selected candidates
+`arad_find()` ranks results deterministically and reports where each match came from. `data_from` and `data_to` are availability boundaries reported by ARAD; `data_to` can extend into a forecast or reporting horizon and is not necessarily the latest observed historical date.
+
+### 2. Inspect a candidate
+
+```r
 info <- arad_info(hits$indicator_id[1], lang = "en")
+
 info$summary
 info$dimensions
 info$updates
 ```
 
-`arad_find()` searches indicator names/IDs and ARAD hierarchy paths and, by default, base/dimension labels and values. Results are ordered deterministically by explainable relevance: exact ID/name matches first, then partial ID/name matches, hierarchy-path matches and dimension matches. `relevance_score` is an ordinal score for ordering the current result set; `matched_in` shows which metadata sources matched. With `details = TRUE`, availability and update metadata are added only for the matched indicators.
-
-`data_from` and `data_to` are availability boundaries reported by ARAD through `/updates`. In particular, `data_to` can extend into a forecast or reporting horizon and should not automatically be interpreted as the latest observed historical date.
-
-`arad_search()` remains available as a faster, lightweight search over indicator names and IDs when hierarchy/dimension discovery is not needed.
-
-## Why aradR
-
-- reliability-first bounded retrieval for long histories;
-- explicit parsing and structural validation;
-- genuine missing values preserved rather than silently dropped;
-- safe handling of identical cross-chunk boundary overlaps;
-- explicit errors for conflicting duplicate observations;
-- ranked, explainable human-readable scoped discovery and metadata inspection;
-- snapshot support;
-- opt-in session or disk caching;
-- retrieval diagnostics for reproducibility;
-- automated tests plus bounded live public-ARAD audits and live UX acceptance checks.
-
-## Retrieval model
-
-`arad_get()` defaults to `strategy = "auto"`: missing date boundaries are resolved through `/updates`, and long histories are divided into deterministic bounded requests before parsing and combination. `strategy = "direct"` remains available for diagnostics and benchmarking.
-
-API responses are ingested as character fields first and explicitly validated afterwards. Genuine missing values remain `NA`; malformed non-missing numeric values, invalid dates, structural parsing problems, and conflicting duplicate observation keys fail loudly.
-
-Retrieval details are attached to results:
+### 3. Retrieve observations
 
 ```r
-attr(x, "arad_diagnostics")
+x <- arad_get(
+  indicator_ids = hits$indicator_id[1],
+  from = "2015-01-01",
+  to = "2026-01-01"
+)
 ```
 
-## Lower-level metadata helpers
+Omit `from` and `to` to retrieve the full ARAD-reported history. Long ranges are resolved and split into bounded requests automatically.
 
-```r
-ind <- arad_indicators(set_id = 1058, lang = "en")
-hits <- arad_search("inflation", set_id = 1058, lang = "en")
-dims <- arad_dimensions(indicator_ids = hits$indicator_id)
-paths <- arad_tree(indicator_ids = hits$indicator_id, lang = "en")
-snaps <- arad_snapshots(lang = "en")
-updates <- arad_updates(indicator_ids = hits$indicator_id)
-```
-
-## Wide output
-
-`arad_get()` intentionally returns a stable long format. Convert it when needed:
+### 4. Reshape when useful
 
 ```r
 wide <- arad_wide(x)
 ```
 
-`arad_wide()` returns one row per period and one column per series. When the same indicator is present in multiple snapshot contexts, snapshot IDs are added to column names automatically so values are not conflated.
+The stable package output is long format. `arad_wide()` creates one row per period and safely distinguishes snapshot contexts when needed.
+
+## Reliability model
+
+`arad_get()` uses `strategy = "auto"` by default. Missing boundaries are resolved through `/updates`; long histories are split into deterministic intervals; responses are parsed character-first and validated before numeric conversion; identical chunk-boundary overlaps can be collapsed, while conflicting duplicate observation keys are treated as integrity errors.
+
+Retrieval diagnostics are attached to every result:
+
+```r
+attr(x, "arad_diagnostics")
+```
+
+The production default chunk size has been calibrated against finer-grained live references across monthly, quarterly, annual and daily series, including multi-indicator and snapshot-backed retrieval.
 
 ## Caching
 
-Caching is explicit and disabled by default:
+Caching is disabled by default:
 
 ```r
 x <- arad_get("SMV5M603", cache = "session")
@@ -169,36 +141,35 @@ x <- arad_get(
 arad_cache_clear()
 ```
 
-Available modes are `"none"`, `"session"`, and `"disk"`. API keys are never written to cache; credential-specific cache separation uses only a one-way hash.
-
-## Reliability baseline
-
-The initial reliability calibration completed on 24 August 2026. Coverage included long monthly, quarterly and annual series across several ARAD scopes, a mixed multi-indicator request, snapshot-backed data, and the daily `SFTP01D15` policy-rate series. The daily series was checked over its full 1995–2026 history and over approximately 3-year and 10-year request windows.
-
-Across the completed matrix, the production default of 3650 days matched finer references exactly: no missing-key differences, no `NA` mismatches, no numeric-value mismatches, and maximum absolute difference zero. Direct requests also matched the references in the tested cases. The 3650-day default is retained as the calibrated default for the current coverage matrix.
-
-The audit remains deliberately bounded and rate-limited because ARAD asks clients not to overload the API with excessive request volume or frequency.
+Disk cache files use R's user cache directory. API keys are never written to cached response files.
 
 ## Documentation
 
-- `vignette("get-started", package = "aradR")` — end-to-end onboarding;
-- [`docs/troubleshooting.md`](docs/troubleshooting.md) — common failures and diagnostics;
-- [`docs/architecture.md`](docs/architecture.md) — public API and reliability design;
-- [`AUTHORS.md`](AUTHORS.md) — authorship and upstream provenance;
-- `_pkgdown.yml` — website structure ready for publication.
+Full documentation is being published at **https://simonamalovana.github.io/aradR/**.
+
+Start with:
+
+- **Get started** — the end-to-end workflow from API key to analytical data;
+- **Finding data** — practical discovery when you do not know indicator IDs;
+- **Reliability and reproducibility** — chunking, validation, missing values, caching and diagnostics;
+- **Reference** — complete function documentation.
+
+The official ARAD documentation and API-key instructions are maintained by the Czech National Bank. `aradR` wraps the public API but does not replace its methodological documentation.
+
+## Scope
+
+`aradR 0.2.0` targets the **public ARAD API only**. Organization-internal endpoints, Windows integrated authentication and private-network proxy behavior are intentionally outside this package.
 
 ## Data citation
 
-When presenting data obtained from ARAD, identify the source as the Czech National Bank ARAD database (for example, `Source: CNB ARAD`).
+When presenting data obtained from ARAD, identify the data source as the Czech National Bank ARAD database (for example, `Source: CNB ARAD`). Package citation and data-source citation are separate: using `aradR` does not make the package the source of the underlying data.
 
-## Author
+## Author and provenance
 
-`aradR` is authored and maintained by **Simona Malovana**. The package metadata and citation information identify Simona Malovana as the package author and maintainer.
+`aradR` is authored and maintained by **Simona Malovana**.
 
-## Provenance
-
-The project is independent from `cnbrrr`, but its initial design review and selected implementation ideas are informed by the MIT-licensed [`petrbouchal/cnbrrr`](https://github.com/petrbouchal/cnbrrr) package by Petr Bouchal. Any adapted code retains the attribution required by its MIT license. See `NOTICE.md`.
+The initial design review and selected implementation ideas were informed by the MIT-licensed [`petrbouchal/cnbrrr`](https://github.com/petrbouchal/cnbrrr) package by Petr Bouchal. Third-party provenance and attribution are documented in `NOTICE.md` and in the distributed package notice.
 
 ## License
 
-MIT. See `LICENSE.md`.
+MIT © 2026 Simona Malovana.
