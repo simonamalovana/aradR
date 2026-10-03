@@ -57,6 +57,14 @@ jobs:
           use-public-rspm: true
 
       - uses: r-lib/actions/setup-tinytex@v2
+        env:
+          TINYTEX_INSTALLER: TinyTeX
+
+      - name: Install CRAN check system tools
+        shell: bash
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y tidy
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
@@ -103,5 +111,5 @@ jobs:
           path: |
             aradR_*.tar.gz
             cran-check.log
-            aradR.Rcheck/00check.log
+            aradR.Rcheck/**
           if-no-files-found: warn
