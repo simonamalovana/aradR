@@ -3,6 +3,5 @@
 #' `aradR` provides a reliability-first interface for discovering, retrieving,
 #' validating, and working with data from the Czech National Bank ARAD API.
 #'
-#' @importFrom curl curl_version
 #' @keywords internal
 "_PACKAGE"
