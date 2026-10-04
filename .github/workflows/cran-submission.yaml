@@ -1,0 +1,245 @@
+name: CRAN submission artifact
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'DESCRIPTION'
+      - 'NAMESPACE'
+      - 'R/**'
+      - 'man/**'
+      - 'tests/**'
+      - 'vignettes/**'
+      - 'inst/**'
+      - 'README.md'
+      - 'NEWS.md'
+      - 'LICENSE'
+      - '.Rbuildignore'
+      - '.github/workflows/cran-submission.yaml'
+  push:
+    branches: [main]
+    paths:
+      - 'DESCRIPTION'
+      - 'NAMESPACE'
+      - 'R/**'
+      - 'man/**'
+      - 'tests/**'
+      - 'vignettes/**'
+      - 'inst/**'
+      - 'README.md'
+      - 'NEWS.md'
+      - 'LICENSE'
+      - '.Rbuildignore'
+      - '.github/workflows/cran-submission.yaml'
+  workflow_dispatch:
+
+permissions: read-all
+
+env:
+  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+  R_KEEP_PKG_SOURCE: yes
+
+jobs:
+  build-source:
+    name: Build canonical source tarball with R-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          http-user-agent: 'release'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - name: Record build R version
+        shell: bash
+        run: Rscript -e 'cat(R.version.string, "\n")'
+
+      - name: Build canonical CRAN source tarball
+        shell: bash
+        run: |
+          set -euo pipefail
+          R CMD build .
+          tarball=$(ls -1t aradR_*.tar.gz | head -n 1)
+          test -n "$tarball"
+          echo "TARBALL=$tarball" >> "$GITHUB_ENV"
+          sha256sum "$tarball" > "$tarball.sha256"
+          echo "Built canonical submission package: $tarball"
+          cat "$tarball.sha256"
+
+      - name: Verify submission tarball contents
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -tzf "$TARBALL" > tarball-contents.txt
+          for forbidden in \
+            '/cran-comments.md' \
+            '/.github/' \
+            '/docs/' \
+            '/AGENTS.md' \
+            '/AUTHORS.md' \
+            '/CONTRIBUTING.md' \
+            '/site/'; do
+            if grep -Fq "$forbidden" tarball-contents.txt; then
+              echo "Forbidden development file found in source tarball: $forbidden"
+              exit 1
+            fi
+          done
+          grep -Fq '/inst/NOTICE' tarball-contents.txt
+
+      - name: Upload canonical submission artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aradR-cran-submission
+          path: |
+            aradR_*.tar.gz
+            aradR_*.tar.gz.sha256
+            tarball-contents.txt
+          if-no-files-found: error
+          retention-days: 30
+
+  check-ubuntu-devel:
+    name: Check exact tarball on Ubuntu R-devel --as-cran
+    needs: build-source
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'devel'
+          http-user-agent: 'release'
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-tinytex@v2
+        env:
+          TINYTEX_INSTALLER: TinyTeX
+
+      - name: Install CRAN check system tools
+        shell: bash
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y tidy
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: aradR-cran-submission
+          path: submission
+
+      - name: Verify checksum
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd submission
+          sha256sum -c aradR_*.tar.gz.sha256
+
+      - name: Check exact submission tarball
+        shell: bash
+        run: |
+          set -uo pipefail
+          tarball=$(ls -1 submission/aradR_*.tar.gz | head -n 1)
+          R CMD check --as-cran "$tarball" 2>&1 | tee cran-check-ubuntu.log
+          check_status=${PIPESTATUS[0]}
+          if [ "$check_status" -ne 0 ]; then
+            exit "$check_status"
+          fi
+          if grep -Eq '^Status:.*(ERROR|WARNING)' aradR.Rcheck/00check.log; then
+            echo 'CRAN gate failed: ERROR or WARNING found.'
+            grep '^Status:' aradR.Rcheck/00check.log || true
+            exit 1
+          fi
+          if grep -Eq '^Status:.*NOTE' aradR.Rcheck/00check.log && ! grep -Fq 'New submission' aradR.Rcheck/00check.log; then
+            echo 'CRAN gate failed: unexpected NOTE found.'
+            grep '^Status:' aradR.Rcheck/00check.log || true
+            exit 1
+          fi
+          grep '^Status:' aradR.Rcheck/00check.log || true
+
+      - name: Upload Ubuntu R-devel check result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aradR-cran-submission-ubuntu-r-devel
+          path: |
+            cran-check-ubuntu.log
+            aradR.Rcheck/**
+          if-no-files-found: warn
+          retention-days: 30
+
+  check-windows-devel:
+    name: Check exact tarball on Windows R-devel --as-cran
+    needs: build-source
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'devel'
+          http-user-agent: 'release'
+
+      - uses: r-lib/actions/setup-tinytex@v2
+        env:
+          TINYTEX_INSTALLER: TinyTeX
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: aradR-cran-submission
+          path: submission
+
+      - name: Check exact submission tarball
+        shell: pwsh
+        run: |
+          $tarball = Get-ChildItem submission/aradR_*.tar.gz | Select-Object -First 1
+          if (-not $tarball) { throw 'Canonical source tarball was not downloaded.' }
+          R.exe CMD check --as-cran $tarball.FullName
+          $checkStatus = $LASTEXITCODE
+          if ($checkStatus -ne 0) { exit $checkStatus }
+          $log = 'aradR.Rcheck/00check.log'
+          if (Select-String -Path $log -Pattern '^Status:.*(ERROR|WARNING)') {
+            Write-Error 'CRAN gate failed: ERROR or WARNING found.'
+            exit 1
+          }
+          $note = Select-String -Path $log -Pattern '^Status:.*NOTE'
+          if ($note -and -not (Select-String -Path $log -Pattern 'New submission')) {
+            Write-Error 'CRAN gate failed: unexpected NOTE found.'
+            exit 1
+          }
+          Select-String -Path $log -Pattern '^Status:' | ForEach-Object { $_.Line }
+
+      - name: Upload Windows R-devel check result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aradR-cran-submission-windows-r-devel
+          path: aradR.Rcheck/**
+          if-no-files-found: warn
+          retention-days: 30
