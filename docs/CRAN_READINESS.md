@@ -1,6 +1,6 @@
 # CRAN readiness — aradR 0.2.0
 
-Status: final pre-submission validation in progress. This checklist covers the external/public package only.
+Status: CRAN pre-submission preparation complete. This checklist covers the external/public package only.
 
 ## Package identity and ownership
 
@@ -40,8 +40,8 @@ Suggested dependencies:
 - [x] A dedicated Windows R 4.1.0 compatibility build/install test has passed with the legacy supported `httr2 0.2.2` stack.
 - [x] Dedicated Ubuntu R-devel source-package CRAN gate builds the source tarball with `R CMD build` and checks that tarball with `R CMD check --as-cran`.
 - [x] Ubuntu R-devel CRAN gate has passed with 0 ERRORs, 0 WARNINGs and 1 NOTE; the sole NOTE is the expected `New submission` incoming-feasibility note.
-- [x] Windows R-devel source-tarball `R CMD check --as-cran` gate added for final pre-submission validation.
-- [ ] Final Windows R-devel gate must pass on the exact pre-submission branch/tarball.
+- [x] Windows R-devel source-tarball `R CMD check --as-cran` gate is active and passed on the final pre-submission package tree.
+- [x] Final Windows R-devel result: 0 ERRORs, 0 WARNINGs and 1 NOTE; the sole NOTE is the expected `New submission` incoming-feasibility note.
 
 ## Internet and external API behaviour
 
@@ -77,17 +77,17 @@ Suggested dependencies:
 
 - [x] Repository is small and well below CRAN package-size concerns.
 - [x] Development-only GitHub/workflow/docs files are excluded from the source package through `.Rbuildignore` where appropriate.
-- [x] The GitHub-only `AUTHORS.md` is excluded from the source tarball; author metadata remains in `Authors@R`.
+- [x] The GitHub-only `AUTHORS.md` and CRAN-only `cran-comments.md` are excluded from the source tarball; author metadata remains in `Authors@R`.
 - [x] The distributed third-party notice is under `inst/` and is therefore retained in the built package.
 - [x] The R-devel gates retain the actual source tarball and complete check directory as CI artifacts for inspection.
-- [ ] Inspect the final source tarball artifact once more after all final CI gates pass.
+- [x] Final Windows source tarball inspected after all gates passed: `aradR_0.2.0.tar.gz` contains no `cran-comments.md`, `.github`, `docs`, `AGENTS.md`, `AUTHORS.md`, `CONTRIBUTING.md`, or `site` development content.
 
 ## Submission material
 
 - [x] `cran-comments.md` prepared with test environments, check result, internet/API behavior and new-submission explanation.
 - [x] Public documentation website published and included in package metadata.
 - [x] Package-name availability re-checked immediately before final validation.
-- [ ] Merge final pre-submission PR only after all CI gates are green.
+- [x] Final pre-submission PR #26 merged after all CI gates were green.
 - [ ] Submit the resulting source package through the CRAN submission form and confirm the submission email.
 
 ## Explicitly not part of this release
