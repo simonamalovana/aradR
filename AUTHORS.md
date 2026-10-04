@@ -8,4 +8,6 @@
 
 ## Upstream provenance
 
-The initial design review and selected implementation ideas were informed by the MIT-licensed `cnbrrr` package by Petr Bouchal. Any adapted code retains the attribution required by the upstream MIT license; see `NOTICE.md` for details.
+**Petr Bouchal** — contributor (`ctb`) credited for the upstream `cnbrrr` package whose design review and selected implementation ideas informed the early development of `aradR`.
+
+The current `aradR` codebase is a substantially different reliability-first implementation with its own retrieval, parsing, caching, discovery and diagnostics architecture. Attribution and the upstream MIT notice are retained in `NOTICE.md` and `inst/NOTICE`.
