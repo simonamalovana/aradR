@@ -141,7 +141,7 @@ jobs:
       - name: Build CRAN source tarball
         shell: pwsh
         run: |
-          R CMD build .
+          R.exe CMD build .
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $tarball = Get-ChildItem aradR_*.tar.gz | Sort-Object LastWriteTime -Descending | Select-Object -First 1
           if (-not $tarball) { throw 'Source tarball was not created.' }
@@ -151,7 +151,7 @@ jobs:
       - name: Check source tarball with Windows R-devel --as-cran
         shell: pwsh
         run: |
-          R CMD check --as-cran $env:TARBALL
+          R.exe CMD check --as-cran $env:TARBALL
           $checkStatus = $LASTEXITCODE
 
           if (Test-Path 'aradR.Rcheck/00check.log') {
