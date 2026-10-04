@@ -3,7 +3,9 @@ Type: Package
 Title: Modern R Client and Toolkit for the Czech National Bank ARAD API
 Version: 0.2.0
 Authors@R: c(
-    person("Simona", "Malovana", email = "simona.malovana@gmail.com", role = c("aut", "cre"))
+    person("Simona", "Malovana", email = "simona.malovana@gmail.com", role = c("aut", "cre")),
+    person("Petr", "Bouchal", email = "pbouchal@gmail.com", role = "ctb",
+           comment = c(ORCID = "0000-0002-0471-716X"))
   )
 Description: Provides a reliability-first interface to the public Czech National Bank
     ARAD API for discovering indicators, browsing human-readable metadata,

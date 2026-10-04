@@ -1,4 +1,4 @@
-name: CRAN check (R-devel)
+name: CRAN checks (R-devel)
 
 on:
   pull_request:
@@ -41,7 +41,7 @@ env:
 
 jobs:
   cran-r-devel:
-    name: R-devel source tarball --as-cran
+    name: Ubuntu R-devel source tarball --as-cran
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -89,7 +89,7 @@ jobs:
           check_status=${PIPESTATUS[0]}
 
           if [ -f aradR.Rcheck/00check.log ]; then
-            echo '### R-devel `R CMD check --as-cran`' >> "$GITHUB_STEP_SUMMARY"
+            echo '### Ubuntu R-devel `R CMD check --as-cran`' >> "$GITHUB_STEP_SUMMARY"
             grep '^Status:' aradR.Rcheck/00check.log >> "$GITHUB_STEP_SUMMARY" || true
           fi
 
@@ -107,9 +107,73 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: aradR-cran-r-devel
+          name: aradR-cran-ubuntu-r-devel
           path: |
             aradR_*.tar.gz
             cran-check.log
+            aradR.Rcheck/**
+          if-no-files-found: warn
+
+  cran-windows-devel:
+    name: Windows R-devel source tarball --as-cran
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'devel'
+          http-user-agent: 'release'
+
+      - uses: r-lib/actions/setup-tinytex@v2
+        env:
+          TINYTEX_INSTALLER: TinyTeX
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+
+      - name: Build CRAN source tarball
+        shell: pwsh
+        run: |
+          R.exe CMD build .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $tarball = Get-ChildItem aradR_*.tar.gz | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $tarball) { throw 'Source tarball was not created.' }
+          "TARBALL=$($tarball.Name)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "Built source package: $($tarball.Name)"
+
+      - name: Check source tarball with Windows R-devel --as-cran
+        shell: pwsh
+        run: |
+          R.exe CMD check --as-cran $env:TARBALL
+          $checkStatus = $LASTEXITCODE
+
+          if (Test-Path 'aradR.Rcheck/00check.log') {
+            '### Windows R-devel `R CMD check --as-cran`' | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+            $status = Select-String -Path 'aradR.Rcheck/00check.log' -Pattern '^Status:'
+            if ($status) {
+              $status.Line | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append
+            }
+          }
+
+          if ($checkStatus -ne 0) { exit $checkStatus }
+          if (Select-String -Path 'aradR.Rcheck/00check.log' -Pattern '^Status:.*(ERROR|WARNING)') {
+            Write-Error 'CRAN gate failed: ERROR or WARNING found.'
+            exit 1
+          }
+
+      - name: Upload Windows CRAN check artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aradR-cran-windows-r-devel
+          path: |
+            aradR_*.tar.gz
             aradR.Rcheck/**
           if-no-files-found: warn
