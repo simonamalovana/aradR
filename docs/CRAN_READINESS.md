@@ -67,8 +67,9 @@ Suggested dependencies:
 - [x] Dedicated `Finding data in ARAD` vignette added.
 - [x] Dedicated `Reliability and reproducibility` vignette added.
 - [x] README rewritten as a concise package landing page.
-- [x] Planned pkgdown URL configured as `https://simonamalovana.github.io/aradR/`.
-- [ ] Publish the pkgdown site and verify the public URL before adding that URL to `DESCRIPTION`.
+- [x] pkgdown site is published through GitHub Pages and the deployment completed successfully on 2026-10-04.
+- [x] Canonical documentation URL is `https://simonamalovana.com/aradR/`.
+- [x] The canonical documentation URL is included in `DESCRIPTION` and `_pkgdown.yml`.
 - [ ] After CRAN acceptance, switch pre-release installation wording/badges to the CRAN release where appropriate.
 
 ## Package size and repository hygiene
@@ -85,11 +86,10 @@ Suggested dependencies:
 Before submitting 0.2.0 to CRAN:
 
 1. confirm the exact `cnbrrr` provenance/derived-code status and add contributor attribution if required;
-2. publish and verify the pkgdown website;
-3. run Win-builder/R-devel against the final tarball;
-4. re-check package-name availability;
-5. prepare `cran-comments.md` with the actual final check environments/results;
-6. submit the source package through the CRAN submission form and confirm the submission email.
+2. run Win-builder/R-devel against the final tarball;
+3. re-check package-name availability;
+4. prepare `cran-comments.md` with the actual final check environments/results;
+5. submit the source package through the CRAN submission form and confirm the submission email.
 
 ## Explicitly not part of this release
 
