@@ -38,10 +38,12 @@ Suggested dependencies:
 - [x] Package targets `R >= 4.1.0`.
 - [x] Existing release-readiness CI has passed on Ubuntu, macOS and Windows.
 - [x] A dedicated Windows R 4.1.0 compatibility build/install test has passed with the legacy supported `httr2 0.2.2` stack.
-- [x] Dedicated Ubuntu R-devel source-package CRAN gate builds the source tarball with `R CMD build` and checks that tarball with `R CMD check --as-cran`.
+- [x] Dedicated Ubuntu R-devel source-package CRAN gate builds a source tarball with `R CMD build` and checks it with `R CMD check --as-cran`.
 - [x] Ubuntu R-devel CRAN gate has passed with 0 ERRORs, 0 WARNINGs and 1 NOTE; the sole NOTE is the expected `New submission` incoming-feasibility note.
 - [x] Windows R-devel source-tarball `R CMD check --as-cran` gate is active and passed on the final pre-submission package tree.
 - [x] Final Windows R-devel result: 0 ERRORs, 0 WARNINGs and 1 NOTE; the sole NOTE is the expected `New submission` incoming-feasibility note.
+- [x] Canonical CRAN submission artifact workflow builds the upload tarball with current R-release, matching CRAN submission policy.
+- [x] The exact R-release-built tarball passed `R CMD check --as-cran` on both Ubuntu R-devel and Windows R-devel in PR #27.
 
 ## Internet and external API behaviour
 
@@ -79,8 +81,9 @@ Suggested dependencies:
 - [x] Development-only GitHub/workflow/docs files are excluded from the source package through `.Rbuildignore` where appropriate.
 - [x] The GitHub-only `AUTHORS.md` and CRAN-only `cran-comments.md` are excluded from the source tarball; author metadata remains in `Authors@R`.
 - [x] The distributed third-party notice is under `inst/` and is therefore retained in the built package.
-- [x] The R-devel gates retain the actual source tarball and complete check directory as CI artifacts for inspection.
-- [x] Final Windows source tarball inspected after all gates passed: `aradR_0.2.0.tar.gz` contains no `cran-comments.md`, `.github`, `docs`, `AGENTS.md`, `AUTHORS.md`, `CONTRIBUTING.md`, or `site` development content.
+- [x] CRAN validation workflows retain source tarballs and complete check directories as CI artifacts for inspection.
+- [x] The canonical R-release submission workflow explicitly rejects development-only content in `aradR_0.2.0.tar.gz` and verifies that `inst/NOTICE` is present.
+- [x] Final source tarball checks confirm no `cran-comments.md`, `.github`, `docs`, `AGENTS.md`, `AUTHORS.md`, `CONTRIBUTING.md`, or `site` development content is included.
 
 ## Submission material
 
@@ -88,7 +91,9 @@ Suggested dependencies:
 - [x] Public documentation website published and included in package metadata.
 - [x] Package-name availability re-checked immediately before final validation.
 - [x] Final pre-submission PR #26 merged after all CI gates were green.
-- [ ] Submit the resulting source package through the CRAN submission form and confirm the submission email.
+- [x] Exact R-release-built submission artifact validation passed in PR #27.
+- [ ] Merge PR #27 and verify the canonical submission artifact generated from `main`.
+- [ ] Submit that exact source package through the CRAN submission form and confirm the submission email.
 
 ## Explicitly not part of this release
 
