@@ -30,5 +30,5 @@ Suggests:
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Config/Needs/website: r-lib/pkgdown
-URL: https://simonamalovana.github.io/aradR/, https://github.com/simonamalovana/aradR
+URL: https://simonamalovana.com/aradR/, https://github.com/simonamalovana/aradR
 BugReports: https://github.com/simonamalovana/aradR/issues
