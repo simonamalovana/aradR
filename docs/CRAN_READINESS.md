@@ -44,6 +44,7 @@ Suggested dependencies:
 - [x] Final Windows R-devel result: 0 ERRORs, 0 WARNINGs and 1 NOTE; the sole NOTE is the expected `New submission` incoming-feasibility note.
 - [x] Canonical CRAN submission artifact workflow builds the upload tarball with current R-release, matching CRAN submission policy.
 - [x] The exact R-release-built tarball passed `R CMD check --as-cran` on both Ubuntu R-devel and Windows R-devel in PR #27.
+- [x] The same canonical workflow passed from `main` at commit `5a1ab9c29abd59169a6226a1228c9a29c3fd0860` (workflow run 37232612193).
 
 ## Internet and external API behaviour
 
@@ -84,6 +85,7 @@ Suggested dependencies:
 - [x] CRAN validation workflows retain source tarballs and complete check directories as CI artifacts for inspection.
 - [x] The canonical R-release submission workflow explicitly rejects development-only content in `aradR_0.2.0.tar.gz` and verifies that `inst/NOTICE` is present.
 - [x] Final source tarball checks confirm no `cran-comments.md`, `.github`, `docs`, `AGENTS.md`, `AUTHORS.md`, `CONTRIBUTING.md`, or `site` development content is included.
+- [x] Final canonical tarball is `aradR_0.2.0.tar.gz`, SHA-256 `95aaf2ad71cfa0c959d94bf629506bc20edb903391754ce70ffd6978ce117b5a`.
 
 ## Submission material
 
@@ -92,7 +94,7 @@ Suggested dependencies:
 - [x] Package-name availability re-checked immediately before final validation.
 - [x] Final pre-submission PR #26 merged after all CI gates were green.
 - [x] Exact R-release-built submission artifact validation passed in PR #27.
-- [ ] Merge PR #27 and verify the canonical submission artifact generated from `main`.
+- [x] PR #27 merged and the canonical submission artifact generated from `main` passed the exact-tarball Ubuntu and Windows R-devel checks.
 - [ ] Submit that exact source package through the CRAN submission form and confirm the submission email.
 
 ## Explicitly not part of this release
