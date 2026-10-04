@@ -1,7 +1,8 @@
 ## Test environments
 
-* Ubuntu 24.04, R-devel, GitHub Actions: `R CMD check --as-cran` on the built source tarball.
-* Windows, R-devel, GitHub Actions: `R CMD check --as-cran` on the built source tarball.
+* Canonical submission tarball: built with current R-release on Ubuntu GitHub Actions using `R CMD build`.
+* Ubuntu 24.04, R-devel, GitHub Actions: `R CMD check --as-cran` on that exact R-release-built source tarball.
+* Windows, R-devel, GitHub Actions: `R CMD check --as-cran` on that exact R-release-built source tarball.
 * Ubuntu, R-release, GitHub Actions: routine `R CMD check`.
 * macOS, R-release, GitHub Actions: release-candidate validation.
 * Windows, R-release, GitHub Actions: release-candidate validation.
