@@ -26,4 +26,4 @@ jobs:
           echo "95aaf2ad71cfa0c959d94bf629506bc20edb903391754ce70ffd6978ce117b5a  submission/aradR_0.2.0.tar.gz" | sha256sum -c -
       - name: Submit to CRAN
         run: |
-          Rscript -e 'install.packages("xfun", repos="https://cloud.r-project.org"); xfun::submit_cran(file="submission/aradR_0.2.0.tar.gz", comment=paste(readLines("cran-comments.md"), collapse="\n"))'
+          Rscript -e 'install.packages(c("xfun", "curl"), repos="https://cloud.r-project.org"); xfun::submit_cran(file="submission/aradR_0.2.0.tar.gz", comment=paste(readLines("cran-comments.md"), collapse="\n"))'
