@@ -7,12 +7,12 @@
 # 1. Install aradR from CRAN:
 #      install.packages("aradR")
 # 2. Obtain your personal API key in ARAD, then set ARAD_API_KEY in ~/.Renviron.
-# 3. In https://www.cnb.cz/arad/ locate the monthly indicator:
-#      New business interest rate, Czech-koruna loans to households
-#      for house purchase, all initial rate-fixation periods, AAR/NDER.
-#    Confirm its unit is % p.a. and its coverage is monthly.
-# 4. Set the EXACT matching indicator ID in ~/.Renviron:
-#      ARAD_MORTGAGE_ID=the_verified_indicator_code
+# 3. This script uses the monthly CNB ARAD series
+#      SMIRNOOBUVMIRS305CZK011111
+#    New-business interest rate, households + NPISH, housing loans,
+#    Czech koruna, banks incl. building societies, total fixing periods.
+#    Verify its methodology against the ECB MIR comparator before interpretation.
+# 4. Optional: override the series ID with ARAD_MORTGAGE_ID in ~/.Renviron.
 #
 # The corresponding harmonised ECB MIR series used on the interactive site:
 # https://data.ecb.europa.eu/data/datasets/MIR/MIR.M.CZ.B.A2C.A.R.A.2250.CZK.N
@@ -22,12 +22,9 @@
 stopifnot(requireNamespace("aradR", quietly = TRUE))
 library(aradR)
 
-indicator_id <- trimws(Sys.getenv("ARAD_MORTGAGE_ID"))
+indicator_id <- trimws(Sys.getenv("ARAD_MORTGAGE_ID", "SMIRNOOBUVMIRS305CZK011111"))
 if (!nzchar(indicator_id)) {
-  stop(
-    "Set ARAD_MORTGAGE_ID in ~/.Renviron to the VERIFIED monthly mortgage ",
-    "new-business AAR indicator in ARAD; do not guess the identifier."
-  )
+  stop("ARAD_MORTGAGE_ID is blank. Set a valid ARAD series or unset the variable.")
 }
 
 # Inspect the metadata, and cross-check it against the definition above.
