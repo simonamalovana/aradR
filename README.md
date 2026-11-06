@@ -113,15 +113,6 @@ wide <- arad_wide(x)
 
 The stable package output is long format. `arad_wide()` creates one row per period and safely distinguishes snapshot contexts when needed.
 
-## Data stories and reproducible examples
-
-Explore **[How quickly do mortgage rates follow monetary policy?](https://simonamalovana.com/data-stories/mortgage-rates/)** — an interactive comparison of Czech new-housing-loan rates and the CNB two-week repo rate.
-
-- [Interactive chart and data notes](https://simonamalovana.com/data-stories/mortgage-rates/) — browser-based visualisation, data download, economic interpretation and sources.
-- [Full R reproduction script](examples/mortgage-policy-rates.R) — uses `arad_info()` and `arad_get()` with ARAD indicator `SMIRNOOBUVMIRS305CZK011111` and the public CNB repo-rate history. Requires your own ARAD API key.
-
-The browser chart uses the publicly accessible harmonised ECB MIR series for visitors without an ARAD API key; the companion R script retrieves the corresponding ARAD series with `aradR`. The two definitions should be checked before analytical comparison.
-
 ## Reliability model
 
 `arad_get()` uses `strategy = "auto"` by default. Missing boundaries are resolved through `/updates`; long histories are split into deterministic intervals; responses are parsed character-first and validated before numeric conversion; identical chunk-boundary overlaps can be collapsed, while conflicting duplicate observation keys are treated as integrity errors.
