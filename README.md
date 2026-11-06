@@ -10,18 +10,18 @@
 
 ## Install
 
-The package is being prepared for CRAN. Until the first CRAN release, install the current version from GitHub:
+Install the released package from [CRAN](https://cran.r-project.org/package=aradR):
+
+```r
+install.packages("aradR")
+```
+
+To install the development version from GitHub instead:
 
 ```r
 pak::pak("simonamalovana/aradR")
 # or
 remotes::install_github("simonamalovana/aradR")
-```
-
-After the CRAN release, the standard installation will be:
-
-```r
-install.packages("aradR")
 ```
 
 ## Quick start
@@ -145,7 +145,7 @@ Disk cache files use R's user cache directory. API keys are never written to cac
 
 ## Documentation
 
-Full documentation is being published at **https://simonamalovana.github.io/aradR/**.
+Full documentation is available at **https://simonamalovana.com/aradR/**.
 
 Start with:
 
