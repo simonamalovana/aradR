@@ -38,6 +38,7 @@ mortgage <- arad_get(
   indicator_ids = indicator_id,
   from = "2015-01-01"
 )
+retrieval_diagnostics <- attr(mortgage, "arad_diagnostics")
 stopifnot(all(c("period", "value", "indicator_id") %in% names(mortgage)))
 mortgage <- mortgage[mortgage$indicator_id == indicator_id, , drop = FALSE]
 if ("snapshot_id" %in% names(mortgage) &&
@@ -101,4 +102,4 @@ dev.off()
 cat("Created mortgage-vs-policy-rates.csv and mortgage-vs-policy-rates.png\n")
 cat("Data available through", tail(mortgage$period, 1), "\n")
 cat("aradR diagnostics:\n")
-print(attr(mortgage, "arad_diagnostics"))
+print(retrieval_diagnostics)
