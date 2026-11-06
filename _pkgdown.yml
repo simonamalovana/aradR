@@ -2,7 +2,7 @@ url: https://simonamalovana.com/aradR/
 destination: site
 
 development:
-  mode: unreleased
+  mode: release
 
 template:
   bootstrap: 5
