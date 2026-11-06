@@ -1,4 +1,4 @@
-# aradR 0.2.0 (release candidate)
+# aradR 0.2.0
 
 **Author and maintainer:** Simona Malovana
 
